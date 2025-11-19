@@ -17,9 +17,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
-// Configure PostgreSQL
+// Configure SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
 
 // Configure Identity
 builder.Services.AddIdentity<User, IdentityRole>(options =>

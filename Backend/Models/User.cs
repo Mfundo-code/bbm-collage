@@ -24,7 +24,6 @@ namespace Backend.Models
         [MaxLength(20)]
         public string? ContactPhone { get; set; }
 
-        [Column(TypeName = "jsonb")]
         public string PrivacySettings { get; set; } = "{}";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

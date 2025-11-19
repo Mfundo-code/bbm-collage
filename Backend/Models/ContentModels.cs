@@ -24,7 +24,6 @@ namespace Backend.Models
         [MaxLength(20)]
         public string PostType { get; set; } = "announcement";
 
-        [Column(TypeName = "jsonb")]
         public string Attachments { get; set; } = "[]";
 
         public bool AllowComments { get; set; } = true;
@@ -33,7 +32,6 @@ namespace Backend.Models
 
         public bool Pinned { get; set; } = false;
 
-        [Column(TypeName = "jsonb")]
         public string Tags { get; set; } = "[]";
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
