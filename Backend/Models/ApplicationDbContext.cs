@@ -35,6 +35,7 @@ namespace Backend.Models
                 entity.ToTable("Users");
                 entity.HasIndex(e => e.Email).IsUnique();
                 entity.HasIndex(e => e.Role);
+                entity.Property(e => e.PrivacySettings).HasColumnType("TEXT");
             });
 
             // OneTimeLoginToken configuration
