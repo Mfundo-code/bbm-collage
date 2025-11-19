@@ -21,3 +21,11 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+# .gitignore
+/Backend/bin/
+/Backend/obj/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+.vs/
