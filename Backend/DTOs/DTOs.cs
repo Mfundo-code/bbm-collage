@@ -276,12 +276,14 @@ namespace Backend.DTOs
     {
         public int Id { get; set; }
         public UserDto Student { get; set; } = null!;
+        public string StudentId { get; set; } = null!;
         public string Title { get; set; } = null!;
         public string SermonDoc { get; set; } = null!;
         public string AudioFile { get; set; } = null!;
         public int AudioDuration { get; set; }
         public DateTime UploadedAt { get; set; }
         public DateTime ExpiresAt { get; set; }
+        
     }
 
     public class HomileticsEntryCreateDto
@@ -301,6 +303,9 @@ namespace Backend.DTOs
 
         [Required]
         public DateTime ExpiresAt { get; set; }
+
+        [Required]
+        public string StudentId { get; set; } = null!;
     }
 
     // Media DTOs

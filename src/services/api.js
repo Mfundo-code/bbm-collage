@@ -1,7 +1,4 @@
-
-// ============================================
-// FILE: src/services/api.js
-// ============================================
+// src/services/api.js
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5112/api';
@@ -73,6 +70,83 @@ export const interactionsAPI = {
 export const usersAPI = {
   createUser: (data) => 
     api.post('/users', data),
+};
+
+export const suggestionsAPI = {
+  getSuggestions: (params = {}) => 
+    api.get('/suggestions', { params }),
+  createSuggestion: (data) => 
+    api.post('/suggestions', data),
+  updateSuggestionStatus: (id, data) => 
+    api.put(`/suggestions/${id}/status`, data),
+  deleteSuggestion: (id) => 
+    api.delete(`/suggestions/${id}`),
+};
+
+export const announcementsAPI = {
+  getAnnouncements: (params = {}) => 
+    api.get('/announcements', { params }),
+  createAnnouncement: (data) => 
+    api.post('/announcements', data),
+  updateAnnouncement: (id, data) => 
+    api.put(`/announcements/${id}`, data),
+  deleteAnnouncement: (id) => 
+    api.delete(`/announcements/${id}`),
+};
+
+export const testimoniesAPI = {
+  getTestimonies: (params = {}) => 
+    api.get('/testimonies', { params }),
+  createTestimony: (data) => 
+    api.post('/testimonies', data),
+  updateTestimony: (id, data) => 
+    api.put(`/testimonies/${id}`, data),
+  deleteTestimony: (id) => 
+    api.delete(`/testimonies/${id}`),
+};
+
+export const sundayServicesAPI = {
+  getSundayServices: (params = {}) => 
+    api.get('/sundayservices', { params }),
+  createSundayService: (data) => 
+    api.post('/sundayservices', data),
+  updateSundayService: (id, data) => 
+    api.put(`/sundayservices/${id}`, data),
+  deleteSundayService: (id) => 
+    api.delete(`/sundayservices/${id}`),
+};
+
+export const missionariesAPI = {
+  getMissionaries: (params = {}) => 
+    api.get('/missionaries', { params }),
+  getMissionary: (userId) => 
+    api.get(`/missionaries/${userId}`),
+  followMissionary: (userId) => 
+    api.post(`/missionaries/${userId}/follow`),
+  unfollowMissionary: (userId) => 
+    api.delete(`/missionaries/${userId}/follow`),
+};
+
+export const alumniAPI = {
+  getAlumni: (params = {}) => 
+    api.get('/alumni', { params }),
+  getAlumnus: (userId) => 
+    api.get(`/alumni/${userId}`),
+  followAlumnus: (userId) => 
+    api.post(`/alumni/${userId}/follow`),
+  unfollowAlumnus: (userId) => 
+    api.delete(`/alumni/${userId}/follow`),
+};
+
+export const homileticsAPI = {
+  getHomiletics: (params = {}) => 
+    api.get('/homiletics', { params }),
+  createHomiletics: (data) => 
+    api.post('/homiletics', data),
+  updateHomiletics: (id, data) => 
+    api.put(`/homiletics/${id}`, data),
+  deleteHomiletics: (id) => 
+    api.delete(`/homiletics/${id}`),
 };
 
 export default api;

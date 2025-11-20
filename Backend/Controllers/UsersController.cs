@@ -6,6 +6,7 @@ using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration; // Add this using statement
 
 namespace Backend.Controllers
 {
@@ -16,11 +17,13 @@ namespace Backend.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IEmailService _emailService;
+        private readonly IConfiguration _configuration; // Add this field declaration
 
-        public UsersController(IAuthService authService, IEmailService emailService)
+        public UsersController(IAuthService authService, IEmailService emailService, IConfiguration configuration)
         {
             _authService = authService;
             _emailService = emailService;
+            _configuration = configuration; // Add this assignment
         }
 
         [HttpPost]
@@ -37,12 +40,27 @@ namespace Backend.Controllers
 
             var (user, password, loginToken) = result.Value;
 
-            // Send welcome email (don't wait for it)
-            _ = _emailService.SendWelcomeEmailAsync(user, password, loginToken);
+            // Try to send welcome email
+            bool emailSent = false;
+            string emailMessage = "Failed to send welcome email";
+            
+            try
+            {
+                emailSent = await _emailService.SendWelcomeEmailAsync(user, password, loginToken);
+                emailMessage = emailSent ? "Welcome email sent successfully" : "Failed to send welcome email";
+            }
+            catch (Exception ex)
+            {
+                emailMessage = $"Email sending failed: {ex.Message}";
+            }
+
+            var siteUrl = _configuration["SiteUrl"] ?? "http://localhost:3000";
+            var autoLoginUrl = $"{siteUrl}/auto-login?token={loginToken.Token}";
 
             return Ok(new
             {
-                message = "User created successfully. Welcome email sent.",
+                message = "User created successfully",
+                emailStatus = emailMessage,
                 user = new UserDto
                 {
                     Id = user.Id,
@@ -53,8 +71,14 @@ namespace Backend.Controllers
                     ContactPhone = user.ContactPhone,
                     CreatedAt = user.CreatedAt
                 },
-                temporaryPassword = password,
-                loginToken = loginToken.Token
+                credentials = new
+                {
+                    temporaryPassword = password,
+                    loginToken = loginToken.Token,
+                    autoLoginUrl = autoLoginUrl,
+                    tokenExpiresAt = loginToken.ExpiresAt
+                },
+                instructions = "You can copy these credentials and send them to the user manually if email delivery failed."
             });
         }
     }

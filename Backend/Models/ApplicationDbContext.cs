@@ -24,6 +24,8 @@ namespace Backend.Models
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Donation> Donations { get; set; }
+        public DbSet<DonationCampaign> DonationCampaigns { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -150,6 +152,26 @@ namespace Backend.Models
                 entity.HasIndex(e => e.ActionType);
                 entity.HasIndex(e => e.TargetTable);
                 entity.HasIndex(e => e.Timestamp);
+            });
+
+            // Donation configuration
+            modelBuilder.Entity<Donation>(entity =>
+            {
+                entity.ToTable("Donations");
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.DonationType);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
+            });
+
+            // DonationCampaign configuration
+            modelBuilder.Entity<DonationCampaign>(entity =>
+            {
+                entity.ToTable("DonationCampaigns");
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
+                entity.Property(e => e.GoalAmount).HasColumnType("decimal(18,2)");
+                entity.Property(e => e.CurrentAmount).HasColumnType("decimal(18,2)");
             });
         }
     }
