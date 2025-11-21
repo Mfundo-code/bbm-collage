@@ -14,9 +14,7 @@ const Homiletics = () => {
     studentId: '',
     title: '',
     sermonDoc: '',
-    audioFile: '',
-    audioDuration: 0,
-    expiresAt: ''
+    audioFile: ''
   });
   const [students, setStudents] = useState([]);
   const { user, canManagePosts } = useAuth();
@@ -49,13 +47,47 @@ const Homiletics = () => {
 
   const handleSermonDocSelect = (e) => {
     if (e.target.files.length > 0) {
-      setSermonDocFile(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      // Validate PDF files only
+      if (file.type !== 'application/pdf') {
+        alert('Please select a PDF file for the sermon document');
+        e.target.value = ''; // Clear the input
+        return;
+      }
+      
+      // Check file size (max 3GB = 3 * 1024 * 1024 * 1024 bytes)
+      const maxSize = 3 * 1024 * 1024 * 1024; // 3GB in bytes
+      if (file.size > maxSize) {
+        alert('File must be less than 3GB');
+        e.target.value = '';
+        return;
+      }
+      
+      setSermonDocFile(file);
     }
   };
 
   const handleAudioFileSelect = (e) => {
     if (e.target.files.length > 0) {
-      setAudioFile(e.target.files[0]);
+      const file = e.target.files[0];
+      
+      // Validate audio files
+      if (!file.type.startsWith('audio/')) {
+        alert('Please select an audio file');
+        e.target.value = '';
+        return;
+      }
+      
+      // Check file size (max 3GB)
+      const maxSize = 3 * 1024 * 1024 * 1024; // 3GB in bytes
+      if (file.size > maxSize) {
+        alert('Audio file must be less than 3GB');
+        e.target.value = '';
+        return;
+      }
+      
+      setAudioFile(file);
     }
   };
 
@@ -78,33 +110,50 @@ const Homiletics = () => {
     setUploading(true);
 
     try {
-      // Upload both files
-      const [sermonDocUrl, audioFileUrl] = await Promise.all([
-        fileUpload.uploadFile(sermonDocFile),
-        fileUpload.uploadFile(audioFile)
-      ]);
+      console.log('Starting file uploads...');
+      console.log('Sermon doc:', sermonDocFile);
+      console.log('Audio file:', audioFile);
 
+      // Upload both files with better error handling
+      const uploadPromises = [
+        fileUpload.uploadFile(sermonDocFile).catch(error => {
+          console.error('Sermon doc upload failed:', error);
+          throw new Error(`Sermon document upload failed: ${error.message}`);
+        }),
+        fileUpload.uploadFile(audioFile).catch(error => {
+          console.error('Audio file upload failed:', error);
+          throw new Error(`Audio file upload failed: ${error.message}`);
+        })
+      ];
+
+      const [sermonDocUrl, audioFileUrl] = await Promise.all(uploadPromises);
+      
+      console.log('Upload successful:', { sermonDocUrl, audioFileUrl });
+
+      // Create the homiletics entry
       await homileticsAPI.createHomiletics({
         ...formData,
         sermonDoc: sermonDocUrl,
         audioFile: audioFileUrl
       });
       
+      // Reset form
       setFormData({
         studentId: '',
         title: '',
         sermonDoc: '',
-        audioFile: '',
-        audioDuration: 0,
-        expiresAt: ''
+        audioFile: ''
       });
       setSermonDocFile(null);
       setAudioFile(null);
       setShowForm(false);
-      fetchEntries();
+      
+      // Refresh entries
+      await fetchEntries();
+      
     } catch (error) {
       console.error('Error creating homiletics entry:', error);
-      alert('Failed to create entry: ' + error.message);
+      alert(`Failed to create entry: ${error.message}`);
     } finally {
       setUploading(false);
     }
@@ -470,7 +519,7 @@ const Homiletics = () => {
                 <label style={styles.label}>
                   Sermon Document (PDF) *
                   <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
-                    PDF files only
+                    PDF files only (max 3GB)
                   </span>
                 </label>
                 <input
@@ -483,7 +532,7 @@ const Homiletics = () => {
                 {sermonDocFile && (
                   <div style={fileUploadStyles.fileItem}>
                     <span style={fileUploadStyles.fileName}>
-                      {sermonDocFile.name} ({(sermonDocFile.size / (1024 * 1024)).toFixed(2)} MB)
+                      {sermonDocFile.name} ({(sermonDocFile.size / (1024 * 1024 * 1024)).toFixed(2)} GB)
                     </span>
                     <button
                       type="button"
@@ -502,7 +551,7 @@ const Homiletics = () => {
                 <label style={styles.label}>
                   Audio File *
                   <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
-                    Audio files (max 350MB)
+                    Audio files (max 3GB)
                   </span>
                 </label>
                 <input
@@ -515,7 +564,7 @@ const Homiletics = () => {
                 {audioFile && (
                   <div style={fileUploadStyles.fileItem}>
                     <span style={fileUploadStyles.fileName}>
-                      {audioFile.name} ({(audioFile.size / (1024 * 1024)).toFixed(2)} MB)
+                      {audioFile.name} ({(audioFile.size / (1024 * 1024 * 1024)).toFixed(2)} GB)
                     </span>
                     <button
                       type="button"
@@ -527,29 +576,6 @@ const Homiletics = () => {
                     </button>
                   </div>
                 )}
-              </div>
-              
-              <div style={styles.field}>
-                <label style={styles.label}>Audio Duration (seconds) *</label>
-                <input
-                  type="number"
-                  value={formData.audioDuration}
-                  onChange={(e) => setFormData({...formData, audioDuration: parseInt(e.target.value)})}
-                  placeholder="e.g., 1800 for 30 minutes"
-                  style={styles.input}
-                  required
-                />
-              </div>
-              
-              <div style={styles.field}>
-                <label style={styles.label}>Expiration Date *</label>
-                <input
-                  type="datetime-local"
-                  value={formData.expiresAt}
-                  onChange={(e) => setFormData({...formData, expiresAt: e.target.value})}
-                  style={styles.input}
-                  required
-                />
               </div>
 
               {uploading && (
@@ -587,7 +613,7 @@ const Homiletics = () => {
       ) : (
         <div style={styles.entries}>
           {entries.map(entry => {
-            const expired = isExpired(entry.expiresAt);
+            const expired = entry.expiresAt ? isExpired(entry.expiresAt) : false;
             return (
               <div 
                 key={entry.id} 
@@ -604,15 +630,21 @@ const Homiletics = () => {
                         By {entry.student.user.firstName} {entry.student.user.lastName}
                       </span>
                       <span>Uploaded: {new Date(entry.uploadedAt).toLocaleString()}</span>
-                      <span style={styles.duration}>
-                        🎵 {formatDuration(entry.audioDuration)}
-                      </span>
-                      <span style={styles.expiry}>
-                        {expired ? '📅 Expired' : `📅 Expires: ${new Date(entry.expiresAt).toLocaleString()}`}
-                      </span>
-                      <span style={expired ? styles.expiredBadge : styles.activeBadge}>
-                        {expired ? 'EXPIRED' : 'ACTIVE'}
-                      </span>
+                      {entry.audioDuration && (
+                        <span style={styles.duration}>
+                          🎵 {formatDuration(entry.audioDuration)}
+                        </span>
+                      )}
+                      {entry.expiresAt && (
+                        <span style={styles.expiry}>
+                          {expired ? '📅 Expired' : `📅 Expires: ${new Date(entry.expiresAt).toLocaleString()}`}
+                        </span>
+                      )}
+                      {entry.expiresAt && (
+                        <span style={expired ? styles.expiredBadge : styles.activeBadge}>
+                          {expired ? 'EXPIRED' : 'ACTIVE'}
+                        </span>
+                      )}
                     </div>
                   </div>
                   
