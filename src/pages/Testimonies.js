@@ -1,6 +1,6 @@
-// src/pages/Testimonies.js
 import React, { useState, useEffect } from 'react';
 import { testimoniesAPI, interactionsAPI } from '../services/api';
+import { fileUpload } from '../services/fileUpload';
 import { useAuth } from '../context/AuthContext';
 
 const Testimonies = () => {
@@ -9,6 +9,8 @@ const Testimonies = () => {
   const [showForm, setShowForm] = useState(false);
   const [commentInputs, setCommentInputs] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     body: '',
@@ -46,15 +48,52 @@ const Testimonies = () => {
     }
   };
 
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(files);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.body?.trim() || !formData.title?.trim()) {
+      alert('Please enter title and testimony content');
+      return;
+    }
+
+    setUploading(true);
+
     try {
-      await testimoniesAPI.createTestimony(formData);
-      setFormData({ title: '', body: '', location: '', outreachTag: '' });
+      let uploadedUrls = [];
+      
+      // Upload files if any
+      if (selectedFiles.length > 0) {
+        uploadedUrls = await fileUpload.uploadMultipleFiles(selectedFiles);
+      }
+
+      await testimoniesAPI.createTestimony({
+        ...formData,
+        attachments: uploadedUrls
+      });
+      
+      setFormData({ 
+        title: '', 
+        body: '', 
+        location: '', 
+        outreachTag: '' 
+      });
+      setSelectedFiles([]);
       setShowForm(false);
       fetchTestimonies();
     } catch (error) {
       console.error('Error creating testimony:', error);
+      alert('Failed to create testimony: ' + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -120,6 +159,41 @@ const Testimonies = () => {
     } catch (error) {
       console.error('Error toggling featured:', error);
     }
+  };
+
+  const fileUploadStyles = {
+    fileInput: {
+      marginBottom: '1rem',
+    },
+    fileList: {
+      marginBottom: '1rem',
+    },
+    fileItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.5rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '6px',
+      marginBottom: '0.5rem',
+    },
+    fileName: {
+      flex: 1,
+      fontSize: '0.9rem',
+      color: '#374151',
+    },
+    removeFile: {
+      background: 'none',
+      border: 'none',
+      color: '#ef4444',
+      cursor: 'pointer',
+      fontSize: '1rem',
+    },
+    uploadProgress: {
+      padding: '1rem',
+      textAlign: 'center',
+      color: '#64748b',
+    },
   };
 
   const styles = {
@@ -473,7 +547,7 @@ const Testimonies = () => {
             <h2 style={styles.formTitle}>Share Your Testimony</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.field}>
-                <label style={styles.label}>Title</label>
+                <label style={styles.label}>Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -507,26 +581,79 @@ const Testimonies = () => {
               </div>
               
               <div style={styles.field}>
-                <label style={styles.label}>Your Testimony</label>
+                <label style={styles.label}>Your Testimony *</label>
                 <textarea
                   value={formData.body}
                   onChange={(e) => setFormData({...formData, body: e.target.value})}
                   placeholder="Share your experience and how God has worked in your life..."
                   style={styles.textarea}
                   required
+                  rows="6"
                 />
               </div>
+
+              {/* File Upload Section */}
+              <div style={styles.field}>
+                <label style={styles.label}>
+                  Photos/Videos (Optional)
+                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
+                    Images, Videos (max 350MB)
+                  </span>
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={handleFileSelect}
+                  style={{...styles.input, padding: '0.5rem'}}
+                  disabled={uploading}
+                />
+                
+                {selectedFiles.length > 0 && (
+                  <div style={fileUploadStyles.fileList}>
+                    <p style={{fontSize: '0.9rem', marginBottom: '0.5rem', color: '#374151'}}>
+                      Selected files ({selectedFiles.length}):
+                    </p>
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} style={fileUploadStyles.fileItem}>
+                        <span style={fileUploadStyles.fileName}>
+                          {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                        <button
+                          type="button"
+                          style={fileUploadStyles.removeFile}
+                          onClick={() => removeFile(index)}
+                          disabled={uploading}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {uploading && (
+                <div style={fileUploadStyles.uploadProgress}>
+                  <p>Uploading files... Please wait.</p>
+                </div>
+              )}
               
               <div style={styles.formActions}>
                 <button 
                   type="button" 
                   style={styles.cancelBtn}
                   onClick={() => setShowForm(false)}
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
-                <button type="submit" style={styles.submitBtn}>
-                  Share Testimony
+                <button 
+                  type="submit" 
+                  style={styles.submitBtn}
+                  disabled={uploading || !formData.body?.trim() || !formData.title?.trim()}
+                >
+                  {uploading ? 'Sharing...' : 'Share Testimony'}
                 </button>
               </div>
             </form>

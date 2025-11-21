@@ -1,6 +1,6 @@
-// src/pages/SundayServices.js
 import React, { useState, useEffect } from 'react';
 import { sundayServicesAPI, interactionsAPI } from '../services/api';
+import { fileUpload } from '../services/fileUpload';
 import { useAuth } from '../context/AuthContext';
 
 const SundayServices = () => {
@@ -9,6 +9,8 @@ const SundayServices = () => {
   const [showForm, setShowForm] = useState(false);
   const [commentInputs, setCommentInputs] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     body: '',
@@ -47,15 +49,53 @@ const SundayServices = () => {
     }
   };
 
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(files);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.body?.trim() || !formData.title?.trim()) {
+      alert('Please enter title and service details');
+      return;
+    }
+
+    setUploading(true);
+
     try {
-      await sundayServicesAPI.createSundayService(formData);
-      setFormData({ title: '', body: '', attachments: [], allowComments: true, allowLikes: true });
+      let uploadedUrls = [];
+      
+      // Upload files if any
+      if (selectedFiles.length > 0) {
+        uploadedUrls = await fileUpload.uploadMultipleFiles(selectedFiles);
+      }
+
+      await sundayServicesAPI.createSundayService({
+        ...formData,
+        attachments: uploadedUrls
+      });
+      
+      setFormData({ 
+        title: '', 
+        body: '', 
+        attachments: [], 
+        allowComments: true, 
+        allowLikes: true 
+      });
+      setSelectedFiles([]);
       setShowForm(false);
       fetchServices();
     } catch (error) {
       console.error('Error creating Sunday service:', error);
+      alert('Failed to create service: ' + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -112,6 +152,41 @@ const SundayServices = () => {
       ...prev,
       [serviceId]: !prev[serviceId]
     }));
+  };
+
+  const fileUploadStyles = {
+    fileInput: {
+      marginBottom: '1rem',
+    },
+    fileList: {
+      marginBottom: '1rem',
+    },
+    fileItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.5rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '6px',
+      marginBottom: '0.5rem',
+    },
+    fileName: {
+      flex: 1,
+      fontSize: '0.9rem',
+      color: '#374151',
+    },
+    removeFile: {
+      background: 'none',
+      border: 'none',
+      color: '#ef4444',
+      cursor: 'pointer',
+      fontSize: '1rem',
+    },
+    uploadProgress: {
+      padding: '1rem',
+      textAlign: 'center',
+      color: '#64748b',
+    },
   };
 
   const styles = {
@@ -463,7 +538,7 @@ const SundayServices = () => {
             <h2 style={styles.formTitle}>Add Sunday Service</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.field}>
-                <label style={styles.label}>Title</label>
+                <label style={styles.label}>Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -475,14 +550,56 @@ const SundayServices = () => {
               </div>
               
               <div style={styles.field}>
-                <label style={styles.label}>Service Details</label>
+                <label style={styles.label}>Service Details *</label>
                 <textarea
                   value={formData.body}
                   onChange={(e) => setFormData({...formData, body: e.target.value})}
                   placeholder="Include sermon notes, worship songs, announcements..."
                   style={styles.textarea}
                   required
+                  rows="6"
                 />
+              </div>
+
+              {/* File Upload Section */}
+              <div style={styles.field}>
+                <label style={styles.label}>
+                  Attachments (Optional)
+                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
+                    Images, Videos (max 350MB), Audio, PDFs
+                  </span>
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*,audio/*,.pdf"
+                  onChange={handleFileSelect}
+                  style={{...styles.input, padding: '0.5rem'}}
+                  disabled={uploading}
+                />
+                
+                {selectedFiles.length > 0 && (
+                  <div style={fileUploadStyles.fileList}>
+                    <p style={{fontSize: '0.9rem', marginBottom: '0.5rem', color: '#374151'}}>
+                      Selected files ({selectedFiles.length}):
+                    </p>
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} style={fileUploadStyles.fileItem}>
+                        <span style={fileUploadStyles.fileName}>
+                          {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                        <button
+                          type="button"
+                          style={fileUploadStyles.removeFile}
+                          onClick={() => removeFile(index)}
+                          disabled={uploading}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div style={styles.checkbox}>
@@ -490,6 +607,7 @@ const SundayServices = () => {
                   type="checkbox"
                   checked={formData.allowComments}
                   onChange={(e) => setFormData({...formData, allowComments: e.target.checked})}
+                  disabled={uploading}
                 />
                 <label>Allow comments</label>
               </div>
@@ -499,20 +617,32 @@ const SundayServices = () => {
                   type="checkbox"
                   checked={formData.allowLikes}
                   onChange={(e) => setFormData({...formData, allowLikes: e.target.checked})}
+                  disabled={uploading}
                 />
                 <label>Allow likes</label>
               </div>
+
+              {uploading && (
+                <div style={fileUploadStyles.uploadProgress}>
+                  <p>Uploading files... Please wait.</p>
+                </div>
+              )}
               
               <div style={styles.formActions}>
                 <button 
                   type="button" 
                   style={styles.cancelBtn}
                   onClick={() => setShowForm(false)}
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
-                <button type="submit" style={styles.submitBtn}>
-                  Add Service
+                <button 
+                  type="submit" 
+                  style={styles.submitBtn}
+                  disabled={uploading || !formData.body?.trim() || !formData.title?.trim()}
+                >
+                  {uploading ? 'Adding...' : 'Add Service'}
                 </button>
               </div>
             </form>

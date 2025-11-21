@@ -1,12 +1,15 @@
-// src/pages/Homiletics.js
 import React, { useState, useEffect } from 'react';
 import { homileticsAPI } from '../services/api';
+import { fileUpload } from '../services/fileUpload';
 import { useAuth } from '../context/AuthContext';
 
 const Homiletics = () => {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [sermonDocFile, setSermonDocFile] = useState(null);
+  const [audioFile, setAudioFile] = useState(null);
   const [formData, setFormData] = useState({
     studentId: '',
     title: '',
@@ -44,10 +47,49 @@ const Homiletics = () => {
     ]);
   };
 
+  const handleSermonDocSelect = (e) => {
+    if (e.target.files.length > 0) {
+      setSermonDocFile(e.target.files[0]);
+    }
+  };
+
+  const handleAudioFileSelect = (e) => {
+    if (e.target.files.length > 0) {
+      setAudioFile(e.target.files[0]);
+    }
+  };
+
+  const removeSermonDoc = () => {
+    setSermonDocFile(null);
+  };
+
+  const removeAudioFile = () => {
+    setAudioFile(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!sermonDocFile || !audioFile) {
+      alert('Please select both sermon document and audio file');
+      return;
+    }
+
+    setUploading(true);
+
     try {
-      await homileticsAPI.createHomiletics(formData);
+      // Upload both files
+      const [sermonDocUrl, audioFileUrl] = await Promise.all([
+        fileUpload.uploadFile(sermonDocFile),
+        fileUpload.uploadFile(audioFile)
+      ]);
+
+      await homileticsAPI.createHomiletics({
+        ...formData,
+        sermonDoc: sermonDocUrl,
+        audioFile: audioFileUrl
+      });
+      
       setFormData({
         studentId: '',
         title: '',
@@ -56,10 +98,15 @@ const Homiletics = () => {
         audioDuration: 0,
         expiresAt: ''
       });
+      setSermonDocFile(null);
+      setAudioFile(null);
       setShowForm(false);
       fetchEntries();
     } catch (error) {
       console.error('Error creating homiletics entry:', error);
+      alert('Failed to create entry: ' + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -81,6 +128,41 @@ const Homiletics = () => {
 
   const isExpired = (expiresAt) => {
     return new Date(expiresAt) < new Date();
+  };
+
+  const fileUploadStyles = {
+    fileInput: {
+      marginBottom: '1rem',
+    },
+    fileList: {
+      marginBottom: '1rem',
+    },
+    fileItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.5rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '6px',
+      marginBottom: '0.5rem',
+    },
+    fileName: {
+      flex: 1,
+      fontSize: '0.9rem',
+      color: '#374151',
+    },
+    removeFile: {
+      background: 'none',
+      border: 'none',
+      color: '#ef4444',
+      cursor: 'pointer',
+      fontSize: '1rem',
+    },
+    uploadProgress: {
+      padding: '1rem',
+      textAlign: 'center',
+      color: '#64748b',
+    },
   };
 
   const styles = {
@@ -355,7 +437,7 @@ const Homiletics = () => {
             <h2 style={styles.formTitle}>Add Homiletics Entry</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.field}>
-                <label style={styles.label}>Student</label>
+                <label style={styles.label}>Student *</label>
                 <select
                   value={formData.studentId}
                   onChange={(e) => setFormData({...formData, studentId: e.target.value})}
@@ -372,7 +454,7 @@ const Homiletics = () => {
               </div>
               
               <div style={styles.field}>
-                <label style={styles.label}>Title</label>
+                <label style={styles.label}>Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -383,32 +465,72 @@ const Homiletics = () => {
                 />
               </div>
               
+              {/* Sermon Document Upload */}
               <div style={styles.field}>
-                <label style={styles.label}>Sermon Document URL</label>
+                <label style={styles.label}>
+                  Sermon Document (PDF) *
+                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
+                    PDF files only
+                  </span>
+                </label>
                 <input
-                  type="url"
-                  value={formData.sermonDoc}
-                  onChange={(e) => setFormData({...formData, sermonDoc: e.target.value})}
-                  placeholder="https://example.com/sermon.pdf"
-                  style={styles.input}
-                  required
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={handleSermonDocSelect}
+                  style={{...styles.input, padding: '0.5rem'}}
+                  disabled={uploading}
                 />
+                {sermonDocFile && (
+                  <div style={fileUploadStyles.fileItem}>
+                    <span style={fileUploadStyles.fileName}>
+                      {sermonDocFile.name} ({(sermonDocFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                    <button
+                      type="button"
+                      style={fileUploadStyles.removeFile}
+                      onClick={removeSermonDoc}
+                      disabled={uploading}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Audio File Upload */}
+              <div style={styles.field}>
+                <label style={styles.label}>
+                  Audio File *
+                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
+                    Audio files (max 350MB)
+                  </span>
+                </label>
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleAudioFileSelect}
+                  style={{...styles.input, padding: '0.5rem'}}
+                  disabled={uploading}
+                />
+                {audioFile && (
+                  <div style={fileUploadStyles.fileItem}>
+                    <span style={fileUploadStyles.fileName}>
+                      {audioFile.name} ({(audioFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                    <button
+                      type="button"
+                      style={fileUploadStyles.removeFile}
+                      onClick={removeAudioFile}
+                      disabled={uploading}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div style={styles.field}>
-                <label style={styles.label}>Audio File URL</label>
-                <input
-                  type="url"
-                  value={formData.audioFile}
-                  onChange={(e) => setFormData({...formData, audioFile: e.target.value})}
-                  placeholder="https://example.com/audio.mp3"
-                  style={styles.input}
-                  required
-                />
-              </div>
-              
-              <div style={styles.field}>
-                <label style={styles.label}>Audio Duration (seconds)</label>
+                <label style={styles.label}>Audio Duration (seconds) *</label>
                 <input
                   type="number"
                   value={formData.audioDuration}
@@ -420,7 +542,7 @@ const Homiletics = () => {
               </div>
               
               <div style={styles.field}>
-                <label style={styles.label}>Expiration Date</label>
+                <label style={styles.label}>Expiration Date *</label>
                 <input
                   type="datetime-local"
                   value={formData.expiresAt}
@@ -429,17 +551,28 @@ const Homiletics = () => {
                   required
                 />
               </div>
+
+              {uploading && (
+                <div style={fileUploadStyles.uploadProgress}>
+                  <p>Uploading files... Please wait.</p>
+                </div>
+              )}
               
               <div style={styles.formActions}>
                 <button 
                   type="button" 
                   style={styles.cancelBtn}
                   onClick={() => setShowForm(false)}
+                  disabled={uploading}
                 >
                   Cancel
                 </button>
-                <button type="submit" style={styles.submitBtn}>
-                  Add Entry
+                <button 
+                  type="submit" 
+                  style={styles.submitBtn}
+                  disabled={uploading || !sermonDocFile || !audioFile}
+                >
+                  {uploading ? 'Adding...' : 'Add Entry'}
                 </button>
               </div>
             </form>
