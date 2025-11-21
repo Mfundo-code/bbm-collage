@@ -14,22 +14,37 @@ namespace Backend.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize]
+    [RequestFormLimits(MultipartBodyLengthLimit = 368435456)] // 350MB
+    [RequestSizeLimit(368435456)] // 350MB
     public class UploadController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _environment;
+        private readonly ILogger<UploadController> _logger;
 
-        public UploadController(ApplicationDbContext context, IWebHostEnvironment environment)
+        public UploadController(
+            ApplicationDbContext context, 
+            IWebHostEnvironment environment,
+            ILogger<UploadController> logger)
         {
             _context = context;
             _environment = environment;
+            _logger = logger;
         }
 
         [HttpPost]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> UploadFile(IFormFile file, [FromForm] string fileType)
         {
+            _logger.LogInformation($"Upload request received - FileType: {fileType}");
+            
             if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded");
+            {
+                _logger.LogWarning("No file uploaded");
+                return BadRequest(new { message = "No file uploaded" });
+            }
+
+            _logger.LogInformation($"File received: {file.FileName}, Size: {file.Length} bytes, ContentType: {file.ContentType}");
 
             // Validate file size based on type
             var maxSize = fileType switch
@@ -42,24 +57,51 @@ namespace Backend.Controllers
             };
 
             if (file.Length > maxSize)
-                return BadRequest($"File size too large. Maximum size is {maxSize / (1024 * 1024)}MB");
+            {
+                var maxSizeMB = maxSize / (1024 * 1024);
+                _logger.LogWarning($"File size {file.Length} exceeds maximum {maxSize}");
+                return BadRequest(new { message = $"File size too large. Maximum size is {maxSizeMB}MB" });
+            }
 
             try
             {
+                // CRITICAL FIX: Get the proper path and ensure directory exists
+                string uploadsFolder;
+                
+                if (string.IsNullOrEmpty(_environment.WebRootPath))
+                {
+                    // If WebRootPath is not set, use ContentRootPath instead
+                    _logger.LogWarning("WebRootPath is null, using ContentRootPath");
+                    var contentRoot = _environment.ContentRootPath;
+                    uploadsFolder = Path.Combine(contentRoot, "wwwroot", "uploads");
+                }
+                else
+                {
+                    uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                }
+                
+                _logger.LogInformation($"Uploads folder path: {uploadsFolder}");
+                
+                // Ensure uploads folder exists
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                    _logger.LogInformation($"Created uploads directory: {uploadsFolder}");
+                }
+
                 // Generate unique filename
                 var fileExtension = Path.GetExtension(file.FileName);
                 var fileName = $"{Guid.NewGuid()}{fileExtension}";
-                var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
-                
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
                 var filePath = Path.Combine(uploadsFolder, fileName);
+                _logger.LogInformation($"Saving file to: {filePath}");
 
+                // Save file
                 using (var stream = new FileStream(filePath, FileMode.Create))
                 {
                     await file.CopyToAsync(stream);
                 }
+
+                _logger.LogInformation($"File saved successfully: {fileName}");
 
                 // Create media item record
                 var mediaItem = new MediaItem
@@ -78,11 +120,18 @@ namespace Backend.Controllers
                 _context.MediaItems.Add(mediaItem);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { url = mediaItem.File });
+                _logger.LogInformation($"Media item created in database with ID: {mediaItem.Id}");
+
+                // Return the full URL for the file
+                var baseUrl = $"{Request.Scheme}://{Request.Host}";
+                var fileUrl = $"{baseUrl}/uploads/{fileName}";
+                
+                return Ok(new { url = fileUrl });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                _logger.LogError(ex, $"Error uploading file: {ex.Message}");
+                return StatusCode(500, new { message = $"Internal server error: {ex.Message}" });
             }
         }
 
@@ -100,15 +149,36 @@ namespace Backend.Controllers
 
                 foreach (var media in expiredMedia)
                 {
-                    // Delete physical file
-                    var filePath = Path.Combine(_environment.WebRootPath, media.File.TrimStart('/'));
-                    if (System.IO.File.Exists(filePath))
+                    try
                     {
-                        System.IO.File.Delete(filePath);
-                    }
+                        // Delete physical file
+                        string uploadsFolder;
+                        if (string.IsNullOrEmpty(_environment.WebRootPath))
+                        {
+                            var contentRoot = _environment.ContentRootPath;
+                            uploadsFolder = Path.Combine(contentRoot, "wwwroot", "uploads");
+                        }
+                        else
+                        {
+                            uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
+                        }
+                        
+                        var fileName = Path.GetFileName(media.File);
+                        var filePath = Path.Combine(uploadsFolder, fileName);
+                        
+                        if (System.IO.File.Exists(filePath))
+                        {
+                            System.IO.File.Delete(filePath);
+                            _logger.LogInformation($"Deleted file: {filePath}");
+                        }
 
-                    _context.MediaItems.Remove(media);
-                    deletedCount++;
+                        _context.MediaItems.Remove(media);
+                        deletedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Error deleting file for media ID {media.Id}");
+                    }
                 }
 
                 await _context.SaveChangesAsync();
@@ -121,7 +191,8 @@ namespace Backend.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error during cleanup: {ex.Message}");
+                _logger.LogError(ex, "Error during cleanup");
+                return StatusCode(500, new { message = $"Error during cleanup: {ex.Message}" });
             }
         }
     }

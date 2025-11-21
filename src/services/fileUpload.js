@@ -98,17 +98,20 @@ export const fileUpload = {
       formData.append('file', fileToUpload);
       formData.append('fileType', fileType);
 
-      // Upload file
-      const response = await fetch('/api/upload', {
+      // CRITICAL FIX: Don't set Content-Type header - browser will set it automatically
+      const response = await fetch('http://localhost:5112/api/upload', {
         method: 'POST',
         body: formData,
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // DO NOT set Content-Type - browser sets it with boundary for FormData
         },
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorText = await response.text();
+        console.error('Upload failed:', errorText);
+        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
       }
 
       const result = await response.json();

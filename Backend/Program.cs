@@ -2,8 +2,11 @@ using System.Text;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -16,6 +19,20 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
+
+// CRITICAL FIX: Configure form options for large file uploads
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 368435456; // 350MB in bytes
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
+
+// CRITICAL FIX: Configure Kestrel to accept large requests
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = 368435456; // 350MB
+});
 
 // Configure SQLite
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -143,6 +160,31 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// CRITICAL FIX: Configure static files properly
+var wwwrootPath = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+if (!Directory.Exists(wwwrootPath))
+{
+    Directory.CreateDirectory(wwwrootPath);
+    Console.WriteLine($"Created wwwroot directory at: {wwwrootPath}");
+}
+
+var uploadsPath = Path.Combine(wwwrootPath, "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+    Console.WriteLine($"Created uploads directory at: {uploadsPath}");
+}
+
+// Enable serving static files from wwwroot
+app.UseStaticFiles();
+
+// Also enable serving files from wwwroot/uploads with custom path
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 app.UseCors("AllowReactApp");
 
 app.UseAuthentication();
@@ -154,6 +196,7 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    
     try
     {
         dbContext.Database.Migrate();
@@ -161,7 +204,7 @@ using (var scope = app.Services.CreateScope())
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error applying migrations: {ex.Message}");
+        Console.WriteLine($"Error during startup: {ex.Message}");
     }
 }
 
