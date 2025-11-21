@@ -1,6 +1,6 @@
-// src/pages/Home.js
 import React, { useState, useEffect } from 'react';
 import { postsAPI, interactionsAPI } from '../services/api';
+import { fileUpload } from '../services/fileUpload';
 import { useAuth } from '../context/AuthContext';
 
 const Home = () => {
@@ -9,6 +9,8 @@ const Home = () => {
   const [showForm, setShowForm] = useState(false);
   const [commentInputs, setCommentInputs] = useState({});
   const [expandedComments, setExpandedComments] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [formData, setFormData] = useState({
     title: '',
     body: '',
@@ -52,13 +54,39 @@ const Home = () => {
     }
   };
 
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles(files);
+  };
+
+  const removeFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.body?.trim()) {
+      alert('Please enter update content');
+      return;
+    }
+
+    setUploading(true);
+
     try {
+      let uploadedUrls = [];
+      
+      // Upload files if any
+      if (selectedFiles.length > 0) {
+        uploadedUrls = await fileUpload.uploadMultipleFiles(selectedFiles);
+      }
+
       await postsAPI.createPost({
         ...formData,
+        attachments: uploadedUrls,
         postType: 'update'
       });
+      
       setFormData({ 
         title: '', 
         body: '', 
@@ -67,10 +95,14 @@ const Home = () => {
         allowLikes: true,
         tags: [] 
       });
+      setSelectedFiles([]);
       setShowForm(false);
       fetchUpdates();
     } catch (error) {
       console.error('Error creating update:', error);
+      alert('Failed to create update: ' + error.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -127,6 +159,41 @@ const Home = () => {
       ...prev,
       [postId]: !prev[postId]
     }));
+  };
+
+  const fileUploadStyles = {
+    fileInput: {
+      marginBottom: '1rem',
+    },
+    fileList: {
+      marginBottom: '1rem',
+    },
+    fileItem: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0.5rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '6px',
+      marginBottom: '0.5rem',
+    },
+    fileName: {
+      flex: 1,
+      fontSize: '0.9rem',
+      color: '#374151',
+    },
+    removeFile: {
+      background: 'none',
+      border: 'none',
+      color: '#ef4444',
+      cursor: 'pointer',
+      fontSize: '1rem',
+    },
+    uploadProgress: {
+      padding: '1rem',
+      textAlign: 'center',
+      color: '#64748b',
+    },
   };
 
   const styles = {
@@ -521,16 +588,58 @@ const Home = () => {
               </div>
               
               <div style={styles.field}>
-                <label style={styles.label}>Content</label>
+                <label style={styles.label}>Content *</label>
                 <textarea
                   value={formData.body}
                   onChange={(e) => setFormData({...formData, body: e.target.value})}
                   placeholder="Share what's happening in the mission field..."
                   style={styles.textarea}
                   required
+                  rows="6"
                   onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
                   onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                 />
+              </div>
+
+              {/* File Upload Section */}
+              <div style={styles.field}>
+                <label style={styles.label}>
+                  Attachments (Optional)
+                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
+                    Images, Videos (max 350MB), Audio, PDFs
+                  </span>
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*,audio/*,.pdf"
+                  onChange={handleFileSelect}
+                  style={{...styles.input, padding: '0.5rem'}}
+                  disabled={uploading}
+                />
+                
+                {selectedFiles.length > 0 && (
+                  <div style={fileUploadStyles.fileList}>
+                    <p style={{fontSize: '0.9rem', marginBottom: '0.5rem', color: '#374151'}}>
+                      Selected files ({selectedFiles.length}):
+                    </p>
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} style={fileUploadStyles.fileItem}>
+                        <span style={fileUploadStyles.fileName}>
+                          {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                        <button
+                          type="button"
+                          style={fileUploadStyles.removeFile}
+                          onClick={() => removeFile(index)}
+                          disabled={uploading}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div style={styles.checkbox}>
@@ -538,6 +647,7 @@ const Home = () => {
                   type="checkbox"
                   checked={formData.allowComments}
                   onChange={(e) => setFormData({...formData, allowComments: e.target.checked})}
+                  disabled={uploading}
                 />
                 <label>Allow comments</label>
               </div>
@@ -547,15 +657,23 @@ const Home = () => {
                   type="checkbox"
                   checked={formData.allowLikes}
                   onChange={(e) => setFormData({...formData, allowLikes: e.target.checked})}
+                  disabled={uploading}
                 />
                 <label>Allow likes</label>
               </div>
+
+              {uploading && (
+                <div style={fileUploadStyles.uploadProgress}>
+                  <p>Uploading files... Please wait.</p>
+                </div>
+              )}
               
               <div style={styles.formActions}>
                 <button 
                   type="button" 
                   style={styles.cancelBtn}
                   onClick={() => setShowForm(false)}
+                  disabled={uploading}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#4b5563'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = '#6b7280'}
                 >
@@ -564,10 +682,11 @@ const Home = () => {
                 <button 
                   type="submit" 
                   style={styles.submitBtn}
+                  disabled={uploading || !formData.body?.trim()}
                   onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
                   onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
                 >
-                  Create Update
+                  {uploading ? 'Creating...' : 'Create Update'}
                 </button>
               </div>
             </form>
