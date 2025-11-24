@@ -29,10 +29,10 @@ const DashboardLayout = () => {
 
   const styles = {
     layout: {
-      minHeight: '100vh',
+      height: '100vh', // Fixed height instead of minHeight
       display: 'flex',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      backgroundColor: '#f8fafc',
+      backgroundColor: 'white', // Changed to white
     },
     sidebar: {
       width: isCollapsed ? '80px' : '280px',
@@ -165,12 +165,14 @@ const DashboardLayout = () => {
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
+      backgroundColor: 'white', // Added white background
     },
     topHeader: {
       backgroundColor: 'white',
       borderBottom: '1px solid #e2e8f0',
       padding: '1rem 2rem',
       boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      flexShrink: 0, // Prevent header from shrinking
     },
     pageTitle: {
       fontSize: '1.5rem',
@@ -181,8 +183,8 @@ const DashboardLayout = () => {
     content: {
       flex: 1,
       padding: '2rem',
-      overflowY: 'auto',
-      backgroundColor: '#f8fafc',
+      overflowY: 'auto', // This will make content scrollable
+      backgroundColor: 'white', // Changed to white
     },
   };
 

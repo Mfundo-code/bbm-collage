@@ -11,6 +11,7 @@ const Testimonies = () => {
   const [expandedComments, setExpandedComments] = useState({});
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploadError, setUploadError] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     body: '',
@@ -51,6 +52,7 @@ const Testimonies = () => {
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
     setSelectedFiles(files);
+    setUploadError('');
   };
 
   const removeFile = (index) => {
@@ -66,15 +68,26 @@ const Testimonies = () => {
     }
 
     setUploading(true);
+    setUploadError('');
 
     try {
       let uploadedUrls = [];
       
       // Upload files if any
       if (selectedFiles.length > 0) {
-        uploadedUrls = await fileUpload.uploadMultipleFiles(selectedFiles);
+        console.log('Starting file uploads...', selectedFiles.length, 'files');
+        try {
+          uploadedUrls = await fileUpload.uploadMultipleFiles(selectedFiles);
+          console.log('Files uploaded successfully:', uploadedUrls);
+        } catch (uploadErr) {
+          console.error('File upload error:', uploadErr);
+          setUploadError(`Upload failed: ${uploadErr.message}`);
+          setUploading(false);
+          return;
+        }
       }
 
+      console.log('Creating testimony with attachments:', uploadedUrls);
       await testimoniesAPI.createTestimony({
         ...formData,
         attachments: uploadedUrls
@@ -91,7 +104,8 @@ const Testimonies = () => {
       fetchTestimonies();
     } catch (error) {
       console.error('Error creating testimony:', error);
-      alert('Failed to create testimony: ' + error.message);
+      const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+      alert('Failed to create testimony: ' + errorMessage);
     } finally {
       setUploading(false);
     }
@@ -193,6 +207,14 @@ const Testimonies = () => {
       padding: '1rem',
       textAlign: 'center',
       color: '#64748b',
+    },
+    uploadError: {
+      padding: '1rem',
+      backgroundColor: '#fef2f2',
+      color: '#dc2626',
+      borderRadius: '6px',
+      marginBottom: '1rem',
+      fontSize: '0.9rem',
     },
   };
 
@@ -378,6 +400,20 @@ const Testimonies = () => {
       whiteSpace: 'pre-wrap',
       fontSize: '1.05rem',
     },
+    mediaGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+      gap: '1rem',
+      marginBottom: '1.5rem'
+    },
+    mediaItem: {
+      width: '100%',
+      height: '150px',
+      objectFit: 'cover',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      transition: 'transform 0.2s',
+    },
     actions: {
       display: 'flex',
       gap: '2rem',
@@ -555,6 +591,7 @@ const Testimonies = () => {
                   placeholder="Give your testimony a title"
                   style={styles.input}
                   required
+                  disabled={uploading}
                 />
               </div>
               
@@ -566,6 +603,7 @@ const Testimonies = () => {
                   onChange={(e) => setFormData({...formData, location: e.target.value})}
                   placeholder="Where did this happen?"
                   style={styles.input}
+                  disabled={uploading}
                 />
               </div>
               
@@ -577,6 +615,7 @@ const Testimonies = () => {
                   onChange={(e) => setFormData({...formData, outreachTag: e.target.value})}
                   placeholder="e.g., Youth Outreach, Medical Mission"
                   style={styles.input}
+                  disabled={uploading}
                 />
               </div>
               
@@ -589,6 +628,7 @@ const Testimonies = () => {
                   style={styles.textarea}
                   required
                   rows="6"
+                  disabled={uploading}
                 />
               </div>
 
@@ -633,9 +673,15 @@ const Testimonies = () => {
                 )}
               </div>
 
+              {uploadError && (
+                <div style={fileUploadStyles.uploadError}>
+                  {uploadError}
+                </div>
+              )}
+
               {uploading && (
                 <div style={fileUploadStyles.uploadProgress}>
-                  <p>Uploading files... Please wait.</p>
+                  <p>Uploading files and creating testimony... Please wait.</p>
                 </div>
               )}
               
@@ -643,7 +689,11 @@ const Testimonies = () => {
                 <button 
                   type="button" 
                   style={styles.cancelBtn}
-                  onClick={() => setShowForm(false)}
+                  onClick={() => {
+                    setShowForm(false);
+                    setUploadError('');
+                    setSelectedFiles([]);
+                  }}
                   disabled={uploading}
                 >
                   Cancel
@@ -715,25 +765,16 @@ const Testimonies = () => {
             </div>
 
             {testimony.attachments && testimony.attachments.length > 0 && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-                gap: '1rem',
-                marginBottom: '1.5rem'
-              }}>
+              <div style={styles.mediaGrid}>
                 {testimony.attachments.map((attachment, index) => (
                   <img 
                     key={index}
                     src={attachment} 
                     alt={`Testimony attachment ${index + 1}`}
-                    style={{
-                      width: '100%',
-                      height: '150px',
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      cursor: 'pointer'
-                    }}
+                    style={styles.mediaItem}
                     onClick={() => window.open(attachment, '_blank')}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
                   />
                 ))}
               </div>
