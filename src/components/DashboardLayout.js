@@ -24,7 +24,7 @@ const DashboardLayout = () => {
     { path: '/dashboard/sunday-services', icon: '⛪', label: 'Sunday Services', description: 'Worship services' },
     { path: '/dashboard/missionaries', icon: '🌍', label: 'Missionaries', description: 'Mission work updates' },
     { path: '/dashboard/alumni', icon: '🎓', label: 'Alumni', description: 'Graduate network' },
-    { path: '/dashboard/homiletics', icon: '📖', label: 'Homiletics', description: 'Sermon resources' },
+    // Homiletics section has been removed
   ];
 
   const styles = {

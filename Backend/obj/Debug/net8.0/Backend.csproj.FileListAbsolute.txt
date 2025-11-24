@@ -149,3 +149,8 @@ C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\Microsoft.Extensions.Primit
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\Microsoft.Extensions.WebEncoders.dll
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\Backend.staticwebassets.runtime.json
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\5e460c6d-813b-4daf-8cd0-6def4d780d57.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\0f4dfbaf-e14a-4019-a49c-e66685063bae.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\1b4bbd69-f9ae-4d5d-9121-7c401018d97d.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\31afea5e-151a-4ac0-ac8c-229529ee3c18.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\aae8703c-4179-4d86-b2d4-3e0d40dbbc72.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\bf8eddf6-eb81-492a-8050-6ed7154c05ae.jpg

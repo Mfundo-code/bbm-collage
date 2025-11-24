@@ -11,22 +11,22 @@ const Homiletics = () => {
   const [sermonDocFile, setSermonDocFile] = useState(null);
   const [audioFile, setAudioFile] = useState(null);
   const [formData, setFormData] = useState({
-    studentId: '',
     title: '',
-    sermonDoc: '',
-    audioFile: ''
+    sermonPoints: '',
   });
-  const [students, setStudents] = useState([]);
   const { user, canManagePosts } = useAuth();
 
+  // Add debug logging
   useEffect(() => {
+    console.log('Homiletics component mounted, user:', user);
     fetchEntries();
-    fetchStudents();
   }, []);
 
   const fetchEntries = async () => {
     try {
+      console.log('Fetching homiletics entries...');
       const response = await homileticsAPI.getHomiletics();
+      console.log('Fetched entries:', response.data);
       setEntries(response.data.items);
     } catch (error) {
       console.error('Error fetching homiletics entries:', error);
@@ -35,29 +35,43 @@ const Homiletics = () => {
     }
   };
 
-  const fetchStudents = async () => {
-    // This would typically come from a students API
-    // For now, we'll mock some data
-    setStudents([
-      { id: '1', user: { firstName: 'John', lastName: 'Doe' } },
-      { id: '2', user: { firstName: 'Jane', lastName: 'Smith' } },
-      { id: '3', user: { firstName: 'Mike', lastName: 'Johnson' } },
-    ]);
+  // Add this function to get audio duration
+  const getAudioDuration = (file) => {
+    return new Promise((resolve) => {
+      const audio = new Audio();
+      audio.src = URL.createObjectURL(file);
+      audio.onloadedmetadata = () => {
+        resolve(Math.round(audio.duration));
+        URL.revokeObjectURL(audio.src);
+      };
+      audio.onerror = () => {
+        console.warn('Could not get audio duration, using default');
+        resolve(0); // Default duration if we can't read it
+      };
+    });
+  };
+
+  // Calculate next Sunday at 11:59 PM
+  const getNextSunday = () => {
+    const now = new Date();
+    const daysUntilSunday = (7 - now.getDay()) % 7 || 7;
+    const nextSunday = new Date(now);
+    nextSunday.setDate(now.getDate() + daysUntilSunday);
+    nextSunday.setHours(23, 59, 59, 999);
+    return nextSunday.toISOString();
   };
 
   const handleSermonDocSelect = (e) => {
     if (e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // Validate PDF files only
       if (file.type !== 'application/pdf') {
         alert('Please select a PDF file for the sermon document');
-        e.target.value = ''; // Clear the input
+        e.target.value = '';
         return;
       }
       
-      // Check file size (max 3GB = 3 * 1024 * 1024 * 1024 bytes)
-      const maxSize = 3 * 1024 * 1024 * 1024; // 3GB in bytes
+      const maxSize = 3 * 1024 * 1024 * 1024;
       if (file.size > maxSize) {
         alert('File must be less than 3GB');
         e.target.value = '';
@@ -72,15 +86,13 @@ const Homiletics = () => {
     if (e.target.files.length > 0) {
       const file = e.target.files[0];
       
-      // Validate audio files
       if (!file.type.startsWith('audio/')) {
         alert('Please select an audio file');
         e.target.value = '';
         return;
       }
       
-      // Check file size (max 3GB)
-      const maxSize = 3 * 1024 * 1024 * 1024; // 3GB in bytes
+      const maxSize = 3 * 1024 * 1024 * 1024;
       if (file.size > maxSize) {
         alert('Audio file must be less than 3GB');
         e.target.value = '';
@@ -102,8 +114,17 @@ const Homiletics = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('Submit button clicked');
+    console.log('Current state:', { sermonDocFile, audioFile, formData, user });
+
+    // Validate required fields
     if (!sermonDocFile || !audioFile) {
       alert('Please select both sermon document and audio file');
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      alert('Please enter sermon title');
       return;
     }
 
@@ -111,10 +132,12 @@ const Homiletics = () => {
 
     try {
       console.log('Starting file uploads...');
-      console.log('Sermon doc:', sermonDocFile);
-      console.log('Audio file:', audioFile);
 
-      // Upload both files with better error handling
+      // Get audio duration
+      const audioDuration = await getAudioDuration(audioFile);
+      console.log('Audio duration:', audioDuration);
+
+      // Upload files
       const uploadPromises = [
         fileUpload.uploadFile(sermonDocFile).catch(error => {
           console.error('Sermon doc upload failed:', error);
@@ -130,19 +153,27 @@ const Homiletics = () => {
       
       console.log('Upload successful:', { sermonDocUrl, audioFileUrl });
 
+      // Prepare data for API - FIXED: Use StudentId (capital S) and include all required fields
+      const homileticsData = {
+        Title: formData.title,
+        SermonPoints: formData.sermonPoints || '', // Optional field
+        SermonDoc: sermonDocUrl,
+        AudioFile: audioFileUrl,
+        AudioDuration: audioDuration,
+        ExpiresAt: getNextSunday(),
+        StudentId: user.id // Use the logged-in user's ID - NOTE: This must match a valid StudentId in your database
+      };
+
+      console.log('Sending data to API:', homileticsData);
+
       // Create the homiletics entry
-      await homileticsAPI.createHomiletics({
-        ...formData,
-        sermonDoc: sermonDocUrl,
-        audioFile: audioFileUrl
-      });
+      const response = await homileticsAPI.createHomiletics(homileticsData);
+      console.log('API response:', response);
       
       // Reset form
       setFormData({
-        studentId: '',
         title: '',
-        sermonDoc: '',
-        audioFile: ''
+        sermonPoints: '',
       });
       setSermonDocFile(null);
       setAudioFile(null);
@@ -150,6 +181,8 @@ const Homiletics = () => {
       
       // Refresh entries
       await fetchEntries();
+      
+      alert('Homiletics entry created successfully!');
       
     } catch (error) {
       console.error('Error creating homiletics entry:', error);
@@ -178,6 +211,9 @@ const Homiletics = () => {
   const isExpired = (expiresAt) => {
     return new Date(expiresAt) < new Date();
   };
+
+  // Update the submit button to remove studentName validation
+  const isSubmitDisabled = uploading || !sermonDocFile || !audioFile || !formData.title.trim();
 
   const fileUploadStyles = {
     fileInput: {
@@ -216,7 +252,7 @@ const Homiletics = () => {
 
   const styles = {
     page: {
-      maxWidth: '1000px',
+      maxWidth: '1200px',
       margin: '0 auto',
       width: '100%',
     },
@@ -259,7 +295,7 @@ const Homiletics = () => {
       borderRadius: '12px',
       padding: '2rem',
       width: '90%',
-      maxWidth: '600px',
+      maxWidth: '700px',
       maxHeight: '90vh',
       overflowY: 'auto',
     },
@@ -296,7 +332,7 @@ const Homiletics = () => {
       fontSize: '1rem',
       fontFamily: 'inherit',
       resize: 'vertical',
-      minHeight: '80px',
+      minHeight: '120px',
     },
     select: {
       padding: '0.75rem',
@@ -366,9 +402,10 @@ const Homiletics = () => {
       flex: 1,
     },
     entryTitle: {
-      fontSize: '1.25rem',
+      fontSize: '1.5rem',
       color: '#1e293b',
       margin: '0 0 0.5rem 0',
+      fontWeight: '700',
     },
     entryMeta: {
       display: 'flex',
@@ -376,6 +413,7 @@ const Homiletics = () => {
       color: '#64748b',
       fontSize: '0.9rem',
       flexWrap: 'wrap',
+      marginBottom: '1rem',
     },
     studentName: {
       fontWeight: '600',
@@ -407,11 +445,28 @@ const Homiletics = () => {
       fontSize: '0.7rem',
       fontWeight: '600',
     },
+    sermonPointsSection: {
+      backgroundColor: '#f8fafc',
+      padding: '1.5rem',
+      borderRadius: '8px',
+      marginBottom: '1.5rem',
+    },
+    sermonPointsTitle: {
+      fontSize: '1.1rem',
+      fontWeight: '600',
+      color: '#374151',
+      margin: '0 0 1rem 0',
+    },
+    sermonPointsContent: {
+      fontSize: '1rem',
+      lineHeight: '1.6',
+      color: '#4b5563',
+      whiteSpace: 'pre-wrap',
+    },
     entryContent: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: '2rem',
-      marginTop: '1.5rem',
     },
     documentSection: {
       display: 'flex',
@@ -440,6 +495,8 @@ const Homiletics = () => {
       textDecoration: 'none',
       fontWeight: '600',
       transition: 'background-color 0.2s',
+      textAlign: 'center',
+      justifyContent: 'center',
     },
     audioPlayer: {
       width: '100%',
@@ -486,24 +543,7 @@ const Homiletics = () => {
             <h2 style={styles.formTitle}>Add Homiletics Entry</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.field}>
-                <label style={styles.label}>Student *</label>
-                <select
-                  value={formData.studentId}
-                  onChange={(e) => setFormData({...formData, studentId: e.target.value})}
-                  style={styles.select}
-                  required
-                >
-                  <option value="">Select a student</option>
-                  {students.map(student => (
-                    <option key={student.id} value={student.id}>
-                      {student.user.firstName} {student.user.lastName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div style={styles.field}>
-                <label style={styles.label}>Title *</label>
+                <label style={styles.label}>Sermon Title *</label>
                 <input
                   type="text"
                   value={formData.title}
@@ -511,6 +551,21 @@ const Homiletics = () => {
                   placeholder="Enter sermon title"
                   style={styles.input}
                   required
+                />
+              </div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>
+                  Sermon Points
+                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
+                    (Key points of the sermon - optional)
+                  </span>
+                </label>
+                <textarea
+                  value={formData.sermonPoints}
+                  onChange={(e) => setFormData({...formData, sermonPoints: e.target.value})}
+                  placeholder="Enter the main points of your sermon (one per line or in paragraphs)"
+                  style={styles.textarea}
                 />
               </div>
               
@@ -596,7 +651,7 @@ const Homiletics = () => {
                 <button 
                   type="submit" 
                   style={styles.submitBtn}
-                  disabled={uploading || !sermonDocFile || !audioFile}
+                  disabled={isSubmitDisabled}
                 >
                   {uploading ? 'Adding...' : 'Add Entry'}
                 </button>
@@ -627,7 +682,7 @@ const Homiletics = () => {
                     <h3 style={styles.entryTitle}>{entry.title}</h3>
                     <div style={styles.entryMeta}>
                       <span style={styles.studentName}>
-                        By {entry.student.user.firstName} {entry.student.user.lastName}
+                        By {entry.studentName || `${entry.student?.user?.firstName} ${entry.student?.user?.lastName}`}
                       </span>
                       <span>Uploaded: {new Date(entry.uploadedAt).toLocaleString()}</span>
                       {entry.audioDuration && (
@@ -659,17 +714,32 @@ const Homiletics = () => {
                   )}
                 </div>
 
+                {/* Sermon Points Section */}
+                {entry.sermonPoints && (
+                  <div style={styles.sermonPointsSection}>
+                    <h4 style={styles.sermonPointsTitle}>Sermon Points</h4>
+                    <div style={styles.sermonPointsContent}>
+                      {entry.sermonPoints}
+                    </div>
+                  </div>
+                )}
+
                 <div style={styles.entryContent}>
                   <div style={styles.documentSection}>
-                    <h4 style={styles.sectionTitle}>Sermon Document</h4>
+                    <h4 style={styles.sectionTitle}>Full Sermon Document</h4>
                     <a
                       href={entry.sermonDoc}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={styles.documentLink}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#3b82f6'}
                     >
-                      📄 View Sermon Notes
+                      📄 Download PDF
                     </a>
+                    <p style={{fontSize: '0.8rem', color: '#64748b', margin: '0.5rem 0 0 0'}}>
+                      Click to view and download the complete sermon notes
+                    </p>
                   </div>
 
                   <div style={styles.audioSection}>
