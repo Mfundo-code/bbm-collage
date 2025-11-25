@@ -505,7 +505,7 @@ const Suggestions = () => {
           <div key={suggestion.id} style={styles.suggestionCard}>
             <div style={styles.suggestionHeader}>
               <div style={styles.suggestionInfo}>
-                <h3 style={suggestionTitle}>{suggestion.title}</h3>
+                <h3 style={styles.suggestionTitle}>{suggestion.title}</h3>
                 <div style={styles.suggestionMeta}>
                   <span style={styles.category}>{suggestion.category}</span>
                   <span>
