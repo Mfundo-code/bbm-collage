@@ -257,18 +257,90 @@ namespace Backend.DTOs
         public Dictionary<string, string> LinkedProfiles { get; set; } = new();
     }
 
-    // Missionary DTOs
+    // Missionary DTOs (updated)
     public class MissionaryDto
     {
         public UserDto User { get; set; } = null!;
         public string? Photo { get; set; }
         public string? LocationCountry { get; set; }
+        public string? OriginalCountry { get; set; }
         public string? SendingOrganization { get; set; }
         public string? Bio { get; set; }
         public string? MinistryDescription { get; set; }
         public string? ContactPreference { get; set; }
         public string ActiveStatus { get; set; } = null!;
         public PostDto? LatestUpdate { get; set; }
+    }
+
+    public class MissionaryCreateDto
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string FirstName { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string LastName { get; set; } = null!;
+
+        [MaxLength(20)]
+        public string? ContactPhone { get; set; }
+
+        [MaxLength(200)]
+        public string? ProfilePhoto { get; set; }
+
+        public string? Bio { get; set; }
+
+        public string? MinistryDescription { get; set; }
+
+        [MaxLength(200)]
+        public string? Organization { get; set; }
+
+        [MaxLength(100)]
+        public string? OriginalCountry { get; set; }
+
+        [MaxLength(100)]
+        public string? MissionCountry { get; set; }
+
+        [MaxLength(50)]
+        public string? ContactPreference { get; set; }
+    }
+
+    public class MissionaryUpdateDto
+    {
+        [MaxLength(100)]
+        public string? FirstName { get; set; }
+
+        [MaxLength(100)]
+        public string? LastName { get; set; }
+
+        [MaxLength(20)]
+        public string? ContactPhone { get; set; }
+
+        [MaxLength(200)]
+        public string? ProfilePhoto { get; set; }
+
+        public string? Bio { get; set; }
+
+        public string? MinistryDescription { get; set; }
+
+        [MaxLength(200)]
+        public string? Organization { get; set; }
+
+        [MaxLength(100)]
+        public string? OriginalCountry { get; set; }
+
+        [MaxLength(100)]
+        public string? MissionCountry { get; set; }
+
+        [MaxLength(50)]
+        public string? ContactPreference { get; set; }
+
+        [MaxLength(20)]
+        public string? ActiveStatus { get; set; }
     }
 
     // Homiletics DTOs

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Backend.DTOs;
 using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,10 +18,12 @@ namespace Backend.Controllers
     public class MissionariesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<User> _userManager;
 
-        public MissionariesController(ApplicationDbContext context)
+        public MissionariesController(ApplicationDbContext context, UserManager<User> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: api/missionaries - Get all missionaries
@@ -77,6 +80,153 @@ namespace Backend.Controllers
                 return NotFound();
 
             return Ok(MapToMissionaryDto(missionary));
+        }
+
+        // POST: api/missionaries - Create new missionary (admin only)
+        [HttpPost]
+        [Authorize(Roles = "admin,secretary")]
+        public async Task<IActionResult> CreateMissionary([FromBody] MissionaryCreateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Check if user already exists
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "User with this email already exists" });
+
+            // Generate random password
+            var password = GenerateRandomPassword();
+
+            // Create user
+            var user = new User
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Role = "missionary",
+                ContactPhone = dto.ContactPhone,
+                ProfilePhoto = dto.ProfilePhoto,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(user, password);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    message = "Failed to create user",
+                    errors = result.Errors.Select(e => e.Description)
+                });
+            }
+
+            // Create missionary profile
+            var missionary = new Missionary
+            {
+                UserId = user.Id,
+                Photo = dto.ProfilePhoto,
+                LocationCountry = dto.MissionCountry,
+                SendingOrganization = dto.Organization,
+                Bio = dto.Bio,
+                MinistryDescription = dto.MinistryDescription,
+                ContactPreference = dto.ContactPreference,
+                ActiveStatus = "active",
+                OriginalCountry = dto.OriginalCountry
+            };
+
+            _context.Missionaries.Add(missionary);
+            await _context.SaveChangesAsync();
+
+            // Reload with relationships
+            missionary = await _context.Missionaries
+                .Include(m => m.User)
+                .FirstAsync(m => m.UserId == user.Id);
+
+            return Ok(new
+            {
+                message = "Missionary created successfully",
+                missionary = MapToMissionaryDto(missionary),
+                credentials = new
+                {
+                    email = user.Email,
+                    temporaryPassword = password
+                }
+            });
+        }
+
+        // PUT: api/missionaries/{userId} - Update missionary profile
+        [HttpPut("{userId}")]
+        public async Task<IActionResult> UpdateMissionary(string userId, [FromBody] MissionaryUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var missionary = await _context.Missionaries
+                .Include(m => m.User)
+                .FirstOrDefaultAsync(m => m.UserId == userId);
+
+            if (missionary == null)
+                return NotFound();
+
+            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+            // Only owner or admin can update
+            if (userId != currentUserId && userRole != "admin" && userRole != "secretary")
+                return Forbid();
+
+            // Update user info
+            missionary.User.FirstName = dto.FirstName ?? missionary.User.FirstName;
+            missionary.User.LastName = dto.LastName ?? missionary.User.LastName;
+            missionary.User.ContactPhone = dto.ContactPhone ?? missionary.User.ContactPhone;
+            missionary.User.ProfilePhoto = dto.ProfilePhoto ?? missionary.User.ProfilePhoto;
+
+            // Update missionary profile
+            missionary.Photo = dto.ProfilePhoto ?? missionary.Photo;
+            missionary.LocationCountry = dto.MissionCountry ?? missionary.LocationCountry;
+            missionary.SendingOrganization = dto.Organization ?? missionary.SendingOrganization;
+            missionary.Bio = dto.Bio ?? missionary.Bio;
+            missionary.MinistryDescription = dto.MinistryDescription ?? missionary.MinistryDescription;
+            missionary.ContactPreference = dto.ContactPreference ?? missionary.ContactPreference;
+            missionary.OriginalCountry = dto.OriginalCountry ?? missionary.OriginalCountry;
+
+            if (userRole == "admin" || userRole == "secretary")
+            {
+                missionary.ActiveStatus = dto.ActiveStatus ?? missionary.ActiveStatus;
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Reload with relationships
+            missionary = await _context.Missionaries
+                .Include(m => m.User)
+                .Include(m => m.LatestUpdate)
+                .ThenInclude(p => p!.Author)
+                .FirstAsync(m => m.UserId == userId);
+
+            return Ok(MapToMissionaryDto(missionary));
+        }
+
+        // DELETE: api/missionaries/{userId} - Delete missionary (admin only)
+        [HttpDelete("{userId}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteMissionary(string userId)
+        {
+            var missionary = await _context.Missionaries
+                .Include(m => m.User)
+                .FirstOrDefaultAsync(m => m.UserId == userId);
+
+            if (missionary == null)
+                return NotFound();
+
+            var user = missionary.User;
+
+            _context.Missionaries.Remove(missionary);
+            await _userManager.DeleteAsync(user);
+
+            return NoContent();
         }
 
         // GET: api/missionaries/{userId}/prayer-requests
@@ -173,7 +323,7 @@ namespace Backend.Controllers
 
             var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
-            // Check if already following (using Likes table to track follows)
+            // Check if already following
             var existingFollow = await _context.Likes
                 .FirstOrDefaultAsync(l => 
                     l.UserId == currentUserId && 
@@ -188,7 +338,7 @@ namespace Backend.Controllers
             {
                 UserId = currentUserId!,
                 ParentType = "missionary",
-                ParentId = int.Parse(userId) // Note: This assumes userId can be parsed to int
+                ParentId = userId.GetHashCode()
             };
 
             _context.Likes.Add(follow);
@@ -225,6 +375,7 @@ namespace Backend.Controllers
                 User = MapToUserDto(missionary.User),
                 Photo = missionary.Photo,
                 LocationCountry = missionary.LocationCountry,
+                OriginalCountry = missionary.OriginalCountry,
                 SendingOrganization = missionary.SendingOrganization,
                 Bio = missionary.Bio,
                 MinistryDescription = missionary.MinistryDescription,
@@ -281,6 +432,14 @@ namespace Backend.Controllers
                 ContactPhone = user.ContactPhone,
                 CreatedAt = user.CreatedAt
             };
+        }
+
+        private static string GenerateRandomPassword()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 12)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
 }

@@ -1,4 +1,3 @@
-// src/services/api.js
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:5112/api';
@@ -121,10 +120,22 @@ export const missionariesAPI = {
     api.get('/missionaries', { params }),
   getMissionary: (userId) => 
     api.get(`/missionaries/${userId}`),
+  createMissionary: (data) => 
+    api.post('/missionaries', data),
+  updateMissionary: (userId, data) => 
+    api.put(`/missionaries/${userId}`, data),
+  deleteMissionary: (userId) => 
+    api.delete(`/missionaries/${userId}`),
   followMissionary: (userId) => 
     api.post(`/missionaries/${userId}/follow`),
   unfollowMissionary: (userId) => 
     api.delete(`/missionaries/${userId}/follow`),
+  getPrayerRequests: (userId, params = {}) => 
+    api.get(`/missionaries/${userId}/prayer-requests`, { params }),
+  createPrayerRequest: (userId, data) => 
+    api.post(`/missionaries/${userId}/prayer-requests`, data),
+  prayForRequest: (requestId) => 
+    api.post(`/missionaries/prayer-requests/${requestId}/pray`),
 };
 
 export const alumniAPI = {

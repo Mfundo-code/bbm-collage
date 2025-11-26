@@ -22,22 +22,26 @@ const SundayServices = () => {
 
   useEffect(() => {
     fetchServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchServices = async () => {
     try {
       const response = await sundayServicesAPI.getSundayServices();
+      const items = response.data?.items || [];
       const servicesWithDetails = await Promise.all(
-        response.data.items.map(async (service) => {
+        items.map(async (service) => {
           const [commentsRes, likesRes] = await Promise.all([
             interactionsAPI.getComments('post', service.id),
             interactionsAPI.getLikes('post', service.id)
           ]);
+          const comments = commentsRes.data?.comments || [];
+          const likes = likesRes.data?.likes || [];
           return {
             ...service,
-            comments: commentsRes.data.comments,
-            likes: likesRes.data.likes,
-            liked: likesRes.data.likes.some(like => like.user.id === user?.id)
+            comments,
+            likes,
+            liked: likes.some(like => like.user.id === user?.id)
           };
         })
       );
@@ -60,7 +64,6 @@ const SundayServices = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!formData.body?.trim() || !formData.title?.trim()) {
       alert('Please enter title and service details');
       return;
@@ -70,8 +73,6 @@ const SundayServices = () => {
 
     try {
       let uploadedUrls = [];
-      
-      // Upload files if any
       if (selectedFiles.length > 0) {
         uploadedUrls = await fileUpload.uploadMultipleFiles(selectedFiles);
       }
@@ -80,20 +81,14 @@ const SundayServices = () => {
         ...formData,
         attachments: uploadedUrls
       });
-      
-      setFormData({ 
-        title: '', 
-        body: '', 
-        attachments: [], 
-        allowComments: true, 
-        allowLikes: true 
-      });
+
+      setFormData({ title: '', body: '', attachments: [], allowComments: true, allowLikes: true });
       setSelectedFiles([]);
       setShowForm(false);
       fetchServices();
     } catch (error) {
       console.error('Error creating Sunday service:', error);
-      alert('Failed to create service: ' + error.message);
+      alert('Failed to create service: ' + (error.message || 'Unknown error'));
     } finally {
       setUploading(false);
     }
@@ -113,13 +108,7 @@ const SundayServices = () => {
     if (!commentText?.trim()) return;
 
     try {
-      await interactionsAPI.addComment({
-        parentType: 'post',
-        parentId: serviceId,
-        text: commentText,
-        attachments: []
-      });
-
+      await interactionsAPI.addComment({ parentType: 'post', parentId: serviceId, text: commentText, attachments: [] });
       setCommentInputs(prev => ({ ...prev, [serviceId]: '' }));
       fetchServices();
     } catch (error) {
@@ -131,7 +120,7 @@ const SundayServices = () => {
     if (!window.confirm('Are you sure you want to delete this Sunday service?')) return;
     try {
       await sundayServicesAPI.deleteSundayService(serviceId);
-      setServices(services.filter(s => s.id !== serviceId));
+      setServices(prev => prev.filter(s => s.id !== serviceId));
     } catch (error) {
       console.error('Error deleting Sunday service:', error);
     }
@@ -148,351 +137,73 @@ const SundayServices = () => {
   };
 
   const toggleComments = (serviceId) => {
-    setExpandedComments(prev => ({
-      ...prev,
-      [serviceId]: !prev[serviceId]
-    }));
+    setExpandedComments(prev => ({ ...prev, [serviceId]: !prev[serviceId] }));
   };
 
+  // --- Shared UI tokens (match Missionaries & Testimonies) ---
+  const PRIMARY = '#06b6d4';
+  const PRIMARY_HOVER = '#0aa9c3';
+  const DANGER = '#ef4444';
+
   const fileUploadStyles = {
-    fileInput: {
-      marginBottom: '1rem',
-    },
-    fileList: {
-      marginBottom: '1rem',
-    },
-    fileItem: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '0.5rem',
-      backgroundColor: '#f8fafc',
-      borderRadius: '6px',
-      marginBottom: '0.5rem',
-    },
-    fileName: {
-      flex: 1,
-      fontSize: '0.9rem',
-      color: '#374151',
-    },
-    removeFile: {
-      background: 'none',
-      border: 'none',
-      color: '#ef4444',
-      cursor: 'pointer',
-      fontSize: '1rem',
-    },
-    uploadProgress: {
-      padding: '1rem',
-      textAlign: 'center',
-      color: '#64748b',
-    },
+    fileInput: { marginBottom: '1rem' },
+    fileList: { marginBottom: '1rem' },
+    fileItem: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#f8fafc', borderRadius: '6px', marginBottom: '0.5rem' },
+    fileName: { flex: 1, fontSize: '0.9rem', color: '#374151' },
+    removeFile: { background: 'none', border: 'none', color: DANGER, cursor: 'pointer', fontSize: '1rem' },
+    uploadProgress: { padding: '1rem', textAlign: 'center', color: '#64748b' }
   };
 
   const styles = {
-    page: {
-      maxWidth: '800px',
-      margin: '0 auto',
-      width: '100%',
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '2rem',
-    },
-    title: {
-      fontSize: '2rem',
-      color: '#1e293b',
-      margin: 0,
-    },
-    addBtn: {
-      backgroundColor: '#059669',
-      color: 'white',
-      border: 'none',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '8px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      fontSize: '1rem',
-      transition: 'background-color 0.2s',
-    },
-    formOverlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000,
-    },
-    formContainer: {
-      background: 'white',
-      borderRadius: '12px',
-      padding: '2rem',
-      width: '90%',
-      maxWidth: '600px',
-      maxHeight: '90vh',
-      overflowY: 'auto',
-    },
-    form: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '1.5rem',
-    },
-    formTitle: {
-      fontSize: '1.5rem',
-      color: '#1e293b',
-      margin: 0,
-    },
-    field: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.5rem',
-    },
-    label: {
-      fontWeight: '600',
-      color: '#374151',
-    },
-    input: {
-      padding: '0.75rem',
-      border: '2px solid #e2e8f0',
-      borderRadius: '8px',
-      fontSize: '1rem',
-      fontFamily: 'inherit',
-    },
-    textarea: {
-      padding: '0.75rem',
-      border: '2px solid #e2e8f0',
-      borderRadius: '8px',
-      fontSize: '1rem',
-      fontFamily: 'inherit',
-      resize: 'vertical',
-      minHeight: '120px',
-    },
-    checkbox: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-    },
-    formActions: {
-      display: 'flex',
-      gap: '1rem',
-      justifyContent: 'flex-end',
-    },
-    cancelBtn: {
-      backgroundColor: '#6b7280',
-      color: 'white',
-      border: 'none',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '8px',
-      fontWeight: '600',
-      cursor: 'pointer',
-    },
-    submitBtn: {
-      backgroundColor: '#059669',
-      color: 'white',
-      border: 'none',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '8px',
-      fontWeight: '600',
-      cursor: 'pointer',
-    },
-    loading: {
-      textAlign: 'center',
-      padding: '4rem 2rem',
-      color: '#64748b',
-    },
-    empty: {
-      textAlign: 'center',
-      padding: '4rem 2rem',
-      color: '#64748b',
-      backgroundColor: 'white',
-      borderRadius: '12px',
-    },
-    serviceCard: {
-      background: 'white',
-      borderRadius: '12px',
-      padding: '2rem',
-      marginBottom: '2rem',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      borderLeft: '4px solid #059669',
-    },
-    serviceHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: '1rem',
-    },
-    serviceInfo: {
-      flex: 1,
-    },
-    serviceTitle: {
-      fontSize: '1.5rem',
-      color: '#1e293b',
-      margin: '0 0 0.5rem 0',
-    },
-    serviceMeta: {
-      display: 'flex',
-      gap: '1rem',
-      color: '#64748b',
-      fontSize: '0.9rem',
-    },
-    serviceBody: {
-      color: '#374151',
-      lineHeight: '1.6',
-      marginBottom: '1.5rem',
-      whiteSpace: 'pre-wrap',
-      fontSize: '1.05rem',
-    },
-    mediaGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-      gap: '1rem',
-      marginBottom: '1.5rem',
-    },
-    mediaItem: {
-      width: '100%',
-      borderRadius: '8px',
-      cursor: 'pointer',
-    },
-    videoPlayer: {
-      width: '100%',
-      height: '300px',
-      borderRadius: '8px',
-    },
-    audioPlayer: {
-      width: '100%',
-      borderRadius: '8px',
-    },
-    actions: {
-      display: 'flex',
-      gap: '2rem',
-      paddingTop: '1rem',
-      borderTop: '1px solid #e2e8f0',
-    },
-    likeBtn: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      background: 'none',
-      border: 'none',
-      color: '#64748b',
-      cursor: 'pointer',
-      fontSize: '1rem',
-      fontWeight: '600',
-      padding: '0.5rem 1rem',
-      borderRadius: '6px',
-      transition: 'all 0.2s',
-    },
-    liked: {
-      color: '#dc2626',
-    },
-    commentToggle: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      background: 'none',
-      border: 'none',
-      color: '#64748b',
-      cursor: 'pointer',
-      fontSize: '1rem',
-      fontWeight: '600',
-      padding: '0.5rem 1rem',
-      borderRadius: '6px',
-      transition: 'all 0.2s',
-    },
-    commentSection: {
-      marginTop: '1.5rem',
-      paddingTop: '1.5rem',
-      borderTop: '1px solid #e2e8f0',
-    },
-    commentInput: {
-      width: '100%',
-      padding: '1rem',
-      border: '2px solid #e2e8f0',
-      borderRadius: '8px',
-      fontSize: '1rem',
-      resize: 'vertical',
-      marginBottom: '1rem',
-      fontFamily: 'inherit',
-    },
-    commentBtn: {
-      backgroundColor: '#059669',
-      color: 'white',
-      border: 'none',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '8px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      fontSize: '1rem',
-    },
-    commentsList: {
-      marginTop: '1.5rem',
-    },
-    comment: {
-      display: 'flex',
-      gap: '1rem',
-      padding: '1rem',
-      backgroundColor: '#f8fafc',
-      borderRadius: '8px',
-      marginBottom: '1rem',
-    },
-    commentAvatar: {
-      width: '36px',
-      height: '36px',
-      borderRadius: '50%',
-      background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-      color: 'white',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontWeight: '600',
-      fontSize: '0.8rem',
-      flexShrink: 0,
-    },
-    commentContent: {
-      flex: 1,
-    },
-    commentHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '0.5rem',
-    },
-    commentAuthor: {
-      fontWeight: '600',
-      color: '#1e293b',
-    },
-    commentDate: {
-      color: '#64748b',
-      fontSize: '0.8rem',
-    },
-    commentText: {
-      color: '#374151',
-      lineHeight: '1.5',
-      whiteSpace: 'pre-wrap',
-    },
-    commentDelete: {
-      background: 'none',
-      border: 'none',
-      color: '#ef4444',
-      cursor: 'pointer',
-      fontSize: '0.8rem',
-      fontWeight: '600',
-    },
-    deleteBtn: {
-      background: 'none',
-      border: 'none',
-      color: '#ef4444',
-      cursor: 'pointer',
-      fontSize: '1rem',
-      padding: '0.5rem',
-      borderRadius: '4px',
-    },
+    page: { maxWidth: '900px', margin: '0 auto', width: '100%', fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' },
+    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' },
+    title: { fontSize: '2rem', color: '#0f172a', margin: 0 },
+    addBtn: { backgroundColor: PRIMARY, color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', fontSize: '1rem', boxShadow: '0 6px 18px rgba(6,182,212,0.08)' },
+    formOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(2,6,23,0.45)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+    formContainer: { background: 'white', borderRadius: '12px', padding: '2rem', width: '90%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' },
+    form: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
+    formTitle: { fontSize: '1.25rem', color: '#0f172a', margin: 0 },
+    field: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
+    label: { fontWeight: 700, color: '#0f172a' },
+    input: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit' },
+    textarea: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '120px' },
+    checkbox: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
+    formActions: { display: 'flex', gap: '1rem', justifyContent: 'flex-end' },
+    cancelBtn: { backgroundColor: '#64748b', color: 'white', border: 'none', padding: '0.65rem 1rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' },
+    submitBtn: { backgroundColor: PRIMARY, color: 'white', border: 'none', padding: '0.65rem 1rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' },
+    loading: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b' },
+    empty: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b', backgroundColor: 'white', borderRadius: '12px' },
+    serviceCard: { background: 'white', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 8px 24px rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.03)' },
+    serviceHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' },
+    serviceInfo: { flex: 1 },
+    serviceTitle: { fontSize: '1.125rem', color: '#0f172a', margin: '0 0 0.5rem 0' },
+    serviceMeta: { display: 'flex', gap: '1rem', color: '#64748b', fontSize: '0.9rem' },
+    serviceBody: { color: '#334155', lineHeight: '1.6', marginBottom: '1rem', whiteSpace: 'pre-wrap', fontSize: '1.03rem' },
+    // mediaGrid uses a responsive grid; each media item is wrapped in a fixed-height thumb so all images look equal
+    mediaGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1rem', alignItems: 'start' },
+    mediaThumb: { width: '100%', height: '200px', overflow: 'hidden', borderRadius: '8px', backgroundColor: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    mediaThumbImg: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' },
+    mediaItem: { width: '100%', borderRadius: '8px', cursor: 'pointer' },
+    videoPlayer: { width: '100%', height: '200px', borderRadius: '8px', objectFit: 'cover' },
+    audioPlayer: { width: '100%', borderRadius: '8px' },
+    actions: { display: 'flex', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid #eef2ff' },
+    likeBtn: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 0.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', border: '1px solid transparent' },
+    likedOutline: { background: PRIMARY, color: 'white', borderColor: PRIMARY },
+    unlikedOutline: { background: 'transparent', color: PRIMARY, borderColor: PRIMARY },
+    commentToggle: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 0.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', border: '1px solid transparent', color: PRIMARY },
+    commentSection: { marginTop: '1rem' },
+    commentInput: { width: '100%', padding: '0.85rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '1rem', resize: 'vertical', marginBottom: '0.75rem' },
+    commentBtn: { backgroundColor: PRIMARY, color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' },
+    commentsList: { marginTop: '1rem' },
+    comment: { display: 'flex', gap: '1rem', padding: '0.8rem', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '0.75rem' },
+    commentAvatar: { width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 },
+    commentContent: { flex: 1 },
+    commentHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' },
+    commentAuthor: { fontWeight: 700, color: '#0f172a' },
+    commentDate: { color: '#64748b', fontSize: '0.85rem' },
+    commentText: { color: '#334155', lineHeight: 1.5, whiteSpace: 'pre-wrap' },
+    commentDelete: { background: 'none', border: 'none', color: DANGER, cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700 },
+    deleteBtn: { background: 'none', border: 'none', color: DANGER, cursor: 'pointer', fontSize: '1rem', padding: '0.4rem', borderRadius: '6px' }
   };
 
   if (loading) {
@@ -503,32 +214,16 @@ const SundayServices = () => {
     );
   }
 
-  const isMediaFile = (url) => {
-    return url.includes('.mp4') || url.includes('.mp3') || url.includes('.wav') || 
-           url.includes('video') || url.includes('audio');
-  };
-
-  const isVideo = (url) => {
-    return url.includes('.mp4') || url.includes('video');
-  };
-
-  const isAudio = (url) => {
-    return url.includes('.mp3') || url.includes('.wav') || url.includes('audio');
-  };
+  const isMediaFile = (url) => url.includes('.mp4') || url.includes('.mp3') || url.includes('.wav') || url.includes('video') || url.includes('audio');
+  const isVideo = (url) => url.includes('.mp4') || url.includes('video');
+  const isAudio = (url) => url.includes('.mp3') || url.includes('.wav') || url.includes('audio');
 
   return (
     <div style={styles.page}>
       <div style={styles.header}>
         <h1 style={styles.title}>Sunday Services</h1>
-        {canManagePosts() && (
-          <button 
-            style={styles.addBtn}
-            onClick={() => setShowForm(true)}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#047857'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#059669'}
-          >
-            + Add Service
-          </button>
+        {(typeof canManagePosts === 'function' ? canManagePosts() : canManagePosts) && (
+          <button style={styles.addBtn} onClick={() => setShowForm(true)} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}>+ Add Service</button>
         )}
       </div>
 
@@ -539,111 +234,48 @@ const SundayServices = () => {
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.field}>
                 <label style={styles.label}>Title *</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="e.g., Sunday Worship Service - Date"
-                  style={styles.input}
-                  required
-                />
-              </div>
-              
-              <div style={styles.field}>
-                <label style={styles.label}>Service Details *</label>
-                <textarea
-                  value={formData.body}
-                  onChange={(e) => setFormData({...formData, body: e.target.value})}
-                  placeholder="Include sermon notes, worship songs, announcements..."
-                  style={styles.textarea}
-                  required
-                  rows="6"
-                />
+                <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="e.g., Sunday Worship Service - Date" style={styles.input} required />
               </div>
 
-              {/* File Upload Section */}
               <div style={styles.field}>
-                <label style={styles.label}>
-                  Attachments (Optional)
-                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
-                    Images, Videos (max 350MB), Audio, PDFs
-                  </span>
+                <label style={styles.label}>Service Details *</label>
+                <textarea value={formData.body} onChange={(e) => setFormData({...formData, body: e.target.value})} placeholder="Include sermon notes, worship songs, announcements..." style={styles.textarea} required rows="6" />
+              </div>
+
+              <div style={styles.field}>
+                <label style={styles.label}>Attachments (Optional)
+                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>Images, Videos (max 350MB), Audio, PDFs</span>
                 </label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*,video/*,audio/*,.pdf"
-                  onChange={handleFileSelect}
-                  style={{...styles.input, padding: '0.5rem'}}
-                  disabled={uploading}
-                />
-                
+                <input type="file" multiple accept="image/*,video/*,audio/*,.pdf" onChange={handleFileSelect} style={{...styles.input, padding: '0.5rem'}} disabled={uploading} />
+
                 {selectedFiles.length > 0 && (
                   <div style={fileUploadStyles.fileList}>
-                    <p style={{fontSize: '0.9rem', marginBottom: '0.5rem', color: '#374151'}}>
-                      Selected files ({selectedFiles.length}):
-                    </p>
+                    <p style={{fontSize: '0.9rem', marginBottom: '0.5rem', color: '#374151'}}>Selected files ({selectedFiles.length}):</p>
                     {selectedFiles.map((file, index) => (
                       <div key={index} style={fileUploadStyles.fileItem}>
-                        <span style={fileUploadStyles.fileName}>
-                          {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
-                        </span>
-                        <button
-                          type="button"
-                          style={fileUploadStyles.removeFile}
-                          onClick={() => removeFile(index)}
-                          disabled={uploading}
-                        >
-                          ×
-                        </button>
+                        <span style={fileUploadStyles.fileName}>{file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                        <button type="button" style={fileUploadStyles.removeFile} onClick={() => removeFile(index)} disabled={uploading}>×</button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              
+
               <div style={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={formData.allowComments}
-                  onChange={(e) => setFormData({...formData, allowComments: e.target.checked})}
-                  disabled={uploading}
-                />
+                <input type="checkbox" checked={formData.allowComments} onChange={(e) => setFormData({...formData, allowComments: e.target.checked})} disabled={uploading} />
                 <label>Allow comments</label>
               </div>
-              
+
               <div style={styles.checkbox}>
-                <input
-                  type="checkbox"
-                  checked={formData.allowLikes}
-                  onChange={(e) => setFormData({...formData, allowLikes: e.target.checked})}
-                  disabled={uploading}
-                />
+                <input type="checkbox" checked={formData.allowLikes} onChange={(e) => setFormData({...formData, allowLikes: e.target.checked})} disabled={uploading} />
                 <label>Allow likes</label>
               </div>
 
-              {uploading && (
-                <div style={fileUploadStyles.uploadProgress}>
-                  <p>Uploading files... Please wait.</p>
-                </div>
-              )}
-              
+              {uploading && (<div style={fileUploadStyles.uploadProgress}><p>Uploading files... Please wait.</p></div>)}
+
               <div style={styles.formActions}>
-                <button 
-                  type="button" 
-                  style={styles.cancelBtn}
-                  onClick={() => setShowForm(false)}
-                  disabled={uploading}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  style={styles.submitBtn}
-                  disabled={uploading || !formData.body?.trim() || !formData.title?.trim()}
-                >
-                  {uploading ? 'Adding...' : 'Add Service'}
-                </button>
+                <button type="button" style={styles.cancelBtn} onClick={() => setShowForm(false)} disabled={uploading}>Cancel</button>
+                <button type="submit" style={styles.submitBtn} disabled={uploading || !formData.body?.trim() || !formData.title?.trim()} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}>{uploading ? 'Adding...' : 'Add Service'}</button>
               </div>
             </form>
           </div>
@@ -651,150 +283,66 @@ const SundayServices = () => {
       )}
 
       {services.length === 0 ? (
-        <div style={styles.empty}>
-          <p>No Sunday services posted yet.</p>
-        </div>
+        <div style={styles.empty}><p>No Sunday services posted yet.</p></div>
       ) : (
         services.map(service => (
           <div key={service.id} style={styles.serviceCard}>
             <div style={styles.serviceHeader}>
               <div style={styles.serviceInfo}>
                 <h3 style={styles.serviceTitle}>{service.title}</h3>
-                <div style={styles.serviceMeta}>
-                  <span>By {service.author.firstName} {service.author.lastName}</span>
-                  <span>{new Date(service.createdAt).toLocaleString()}</span>
-                </div>
+                <div style={styles.serviceMeta}><span>By {service.author.firstName} {service.author.lastName}</span><span>{new Date(service.createdAt).toLocaleString()}</span></div>
               </div>
-              
-              {canManagePosts() && (
-                <button 
-                  style={styles.deleteBtn}
-                  onClick={() => handleDeleteService(service.id)}
-                  title="Delete service"
-                >
-                  🗑️
-                </button>
+
+              {(typeof canManagePosts === 'function' ? canManagePosts() : canManagePosts) && (
+                <button style={styles.deleteBtn} onClick={() => handleDeleteService(service.id)} title="Delete service">🗑️</button>
               )}
             </div>
 
-            <div style={styles.serviceBody}>
-              {service.body}
-            </div>
+            <div style={styles.serviceBody}>{service.body}</div>
 
             {service.attachments && service.attachments.length > 0 && (
-              <div style={styles.mediaGrid}>
-                {service.attachments.map((attachment, index) => (
-                  <div key={index}>
-                    {isVideo(attachment) ? (
-                      <video 
-                        controls 
-                        style={styles.videoPlayer}
-                      >
-                        <source src={attachment} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    ) : isAudio(attachment) ? (
-                      <audio 
-                        controls 
-                        style={styles.audioPlayer}
-                      >
-                        <source src={attachment} type="audio/mpeg" />
-                        Your browser does not support the audio tag.
-                      </audio>
-                    ) : (
-                      <img 
-                        src={attachment} 
-                        alt={`Service attachment ${index + 1}`}
-                        style={styles.mediaItem}
-                        onClick={() => window.open(attachment, '_blank')}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+              <div style={styles.mediaGrid}>{service.attachments.map((attachment, index) => (
+                <div key={index}>
+                  {isVideo(attachment) ? (
+                    <video controls style={styles.videoPlayer}><source src={attachment} type="video/mp4" />Your browser does not support the video tag.</video>
+                  ) : isAudio(attachment) ? (
+                    <audio controls style={styles.audioPlayer}><source src={attachment} type="audio/mpeg" />Your browser does not support the audio tag.</audio>
+                  ) : (
+                    <div style={styles.mediaThumb}><img src={attachment} alt={`Service attachment ${index + 1}`} style={styles.mediaThumbImg} onClick={() => window.open(attachment, '_blank')} /></div>
+                  )}
+                </div>
+              ))}</div>
             )}
 
             <div style={styles.actions}>
               {service.allowLikes && (
-                <button 
-                  style={{
-                    ...styles.likeBtn,
-                    ...(service.liked ? styles.liked : {})
-                  }}
-                  onClick={() => handleLike(service.id)}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  {service.liked ? '❤️' : '🤍'} {service.likes.length} Likes
-                </button>
+                <button style={{ ...styles.likeBtn, ...(service.liked ? styles.likedOutline : styles.unlikedOutline) }} onClick={() => handleLike(service.id)} onMouseEnter={(e) => { if (!service.liked) { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; } }} onMouseLeave={(e) => { if (!service.liked) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; } }}>{service.liked ? '❤️' : '🤍'} {service.likes.length} Likes</button>
               )}
-              
+
               {service.allowComments && (
-                <button 
-                  style={styles.commentToggle}
-                  onClick={() => toggleComments(service.id)}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f1f5f9'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                >
-                  💬 {service.comments.length} Comments
-                </button>
+                <button style={{ ...styles.commentToggle, border: '1px solid transparent', background: 'transparent', color: PRIMARY }} onClick={() => toggleComments(service.id)} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; }}>💬 {service.comments.length} Comments</button>
               )}
             </div>
 
             {expandedComments[service.id] && service.allowComments && (
               <div style={styles.commentSection}>
-                <textarea
-                  placeholder="Share your thoughts about the service..."
-                  value={commentInputs[service.id] || ''}
-                  onChange={(e) => setCommentInputs(prev => ({
-                    ...prev,
-                    [service.id]: e.target.value
-                  }))}
-                  rows="3"
-                  style={styles.commentInput}
-                />
-                <button 
-                  style={styles.commentBtn}
-                  onClick={() => handleCommentSubmit(service.id)}
-                  disabled={!commentInputs[service.id]?.trim()}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#047857'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = '#059669'}
-                >
-                  Post Comment
-                </button>
+                <textarea placeholder="Share your thoughts about the service..." value={commentInputs[service.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [service.id]: e.target.value }))} rows="3" style={styles.commentInput} />
+                <button style={styles.commentBtn} onClick={() => handleCommentSubmit(service.id)} disabled={!commentInputs[service.id]?.trim()} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}>Post Comment</button>
 
                 {service.comments.length > 0 && (
-                  <div style={styles.commentsList}>
-                    {service.comments.map(comment => (
-                      <div key={comment.id} style={styles.comment}>
-                        <div style={styles.commentAvatar}>
-                          {comment.author.firstName?.[0]}{comment.author.lastName?.[0]}
-                        </div>
-                        <div style={styles.commentContent}>
-                          <div style={styles.commentHeader}>
-                            <span style={styles.commentAuthor}>
-                              {comment.author.firstName} {comment.author.lastName}
-                            </span>
-                            <span style={styles.commentDate}>
-                              {new Date(comment.createdAt).toLocaleString()}
-                            </span>
-                          </div>
-                          <p style={styles.commentText}>{comment.text}</p>
-                          
-                          {(comment.author.id === user?.id || canManagePosts()) && (
-                            <button 
-                              style={styles.commentDelete}
-                              onClick={() => handleDeleteComment(comment.id)}
-                              onMouseEnter={(e) => e.target.style.backgroundColor = '#fef2f2'}
-                              onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
+                  <div style={styles.commentsList}>{service.comments.map(comment => (
+                    <div key={comment.id} style={styles.comment}>
+                      <div style={styles.commentAvatar}>{comment.author.firstName?.[0]}{comment.author.lastName?.[0]}</div>
+                      <div style={styles.commentContent}>
+                        <div style={styles.commentHeader}><span style={styles.commentAuthor}>{comment.author.firstName} {comment.author.lastName}</span><span style={styles.commentDate}>{new Date(comment.createdAt).toLocaleString()}</span></div>
+                        <p style={styles.commentText}>{comment.text}</p>
+
+                        {(comment.author.id === user?.id || (typeof canManagePosts === 'function' ? canManagePosts() : canManagePosts)) && (
+                          <button style={styles.commentDelete} onClick={() => handleDeleteComment(comment.id)}>Delete</button>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}</div>
                 )}
               </div>
             )}

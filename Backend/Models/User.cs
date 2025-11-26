@@ -152,6 +152,9 @@ namespace Backend.Models
         [MaxLength(100)]
         public string? LocationCountry { get; set; }
 
+        [MaxLength(100)]
+        public string? OriginalCountry { get; set; } // NEW PROPERTY
+
         [MaxLength(200)]
         public string? SendingOrganization { get; set; }
 
