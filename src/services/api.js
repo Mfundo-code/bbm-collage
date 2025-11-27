@@ -143,10 +143,20 @@ export const alumniAPI = {
     api.get('/alumni', { params }),
   getAlumnus: (userId) => 
     api.get(`/alumni/${userId}`),
+  createAlumni: (data) => 
+    api.post('/alumni', data),
+  updateAlumni: (userId, data) => 
+    api.put(`/alumni/${userId}`, data),
+  deleteAlumni: (userId) => 
+    api.delete(`/alumni/${userId}`),
   followAlumnus: (userId) => 
     api.post(`/alumni/${userId}/follow`),
   unfollowAlumnus: (userId) => 
     api.delete(`/alumni/${userId}/follow`),
+  getGraduationYears: () => 
+    api.get('/alumni/years'),
+  getLocations: () => 
+    api.get('/alumni/locations'),
 };
 
 export const homileticsAPI = {
@@ -158,6 +168,47 @@ export const homileticsAPI = {
     api.put(`/homiletics/${id}`, data),
   deleteHomiletics: (id) => 
     api.delete(`/homiletics/${id}`),
+};
+
+export const donationsAPI = {
+  getDonations: (params = {}) => 
+    api.get('/donations', { params }),
+  getPublicDonations: (params = {}) => 
+    api.get('/donations/public', { params }),
+  getDonation: (id) => 
+    api.get(`/donations/${id}`),
+  createDonation: (data) => 
+    api.post('/donations', data),
+  updateDonationStatus: (id, data) => 
+    api.put(`/donations/${id}/status`, data),
+  getDonationStats: () => 
+    api.get('/donations/stats'),
+  getCampaigns: (params = {}) => 
+    api.get('/donations/campaigns', { params }),
+  createCampaign: (data) => 
+    api.post('/donations/campaigns', data),
+};
+
+export const uploadAPI = {
+  uploadFile: (formData, onProgress = null) => {
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      onUploadProgress: onProgress ? (progressEvent) => {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(percentCompleted);
+      } : undefined,
+    };
+    return api.post('/upload', formData, config);
+  },
+  cleanupExpiredMedia: () => 
+    api.post('/upload/cleanup-expired'),
+};
+
+export const setupAPI = {
+  createAdmin: (data) => 
+    api.post('/setup/create-admin', data),
 };
 
 export default api;

@@ -1,3 +1,5 @@
+import { uploadAPI } from './api';
+
 export const fileUpload = {
   validateFile: (file, maxSizeMB) => {
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
@@ -98,27 +100,22 @@ export const fileUpload = {
       formData.append('file', fileToUpload);
       formData.append('fileType', fileType);
 
-      // CRITICAL FIX: Don't set Content-Type header - browser will set it automatically
-      const response = await fetch('http://localhost:5112/api/upload', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-          // DO NOT set Content-Type - browser sets it with boundary for FormData
-        },
-      });
+      const response = await uploadAPI.uploadFile(formData, onProgress);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Upload failed:', errorText);
-        throw new Error(`Upload failed: ${response.status} - ${errorText}`);
+      if (response.data && response.data.url) {
+        return response.data.url;
+      } else {
+        throw new Error('No URL returned from server');
       }
-
-      const result = await response.json();
-      return result.url; // Return the file URL
     } catch (error) {
       console.error('Upload error:', error);
-      throw error;
+      if (error.response) {
+        throw new Error(error.response.data.message || 'Upload failed');
+      } else if (error.request) {
+        throw new Error('No response from server. Please check your connection.');
+      } else {
+        throw error;
+      }
     }
   },
 

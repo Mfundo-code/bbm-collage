@@ -154,3 +154,7 @@ C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\1b4bbd69-f9
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\31afea5e-151a-4ac0-ac8c-229529ee3c18.jpg
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\aae8703c-4179-4d86-b2d4-3e0d40dbbc72.jpg
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\bf8eddf6-eb81-492a-8050-6ed7154c05ae.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\3a1d73c5-bd85-4ebb-b5d2-22fcfd46b672.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\762c2247-3a91-4d5f-97f4-fa91eb7edd7e.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\824aaf20-f06d-4ffb-ab0d-c1e84c346d9c.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\eee688df-dfd9-43f7-b219-fb409937305c.jpg

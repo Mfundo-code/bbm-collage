@@ -257,6 +257,51 @@ namespace Backend.DTOs
         public Dictionary<string, string> LinkedProfiles { get; set; } = new();
     }
 
+    public class AlumniCreateDto
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string FirstName { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string LastName { get; set; } = null!;
+
+        [MaxLength(20)]
+        public string? ContactPhone { get; set; }
+
+        [MaxLength(200)]
+        public string? ProfilePhoto { get; set; }
+
+        [Required]
+        [Range(1950, 2100)]
+        public int GraduationYear { get; set; }
+
+        [MaxLength(200)]
+        public string? CurrentLocation { get; set; }
+
+        public string? Bio { get; set; }
+
+        public List<string> Skills { get; set; } = new();
+
+        public Dictionary<string, string> PublicContact { get; set; } = new();
+
+        public Dictionary<string, string> LinkedProfiles { get; set; } = new();
+    }
+
+    public class AlumniUpdateDto
+    {
+        public string? CurrentLocation { get; set; }
+        public string? Bio { get; set; }
+        public List<string> Skills { get; set; } = new();
+        public Dictionary<string, string> PublicContact { get; set; } = new();
+        public Dictionary<string, string> LinkedProfiles { get; set; } = new();
+    }
+
     // Missionary DTOs (updated)
     public class MissionaryDto
     {

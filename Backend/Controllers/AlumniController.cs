@@ -1,13 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Backend.DTOs;
 using Backend.Models;
+using Backend.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.ComponentModel.DataAnnotations;
 
 namespace Backend.Controllers
 {
@@ -16,10 +14,12 @@ namespace Backend.Controllers
     [Authorize]
     public class AlumniController : ControllerBase
     {
+        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
-        public AlumniController(ApplicationDbContext context)
+        public AlumniController(UserManager<User> userManager, ApplicationDbContext context)
         {
+            _userManager = userManager;
             _context = context;
         }
 
@@ -104,6 +104,78 @@ namespace Backend.Controllers
             return Ok(locations);
         }
 
+        // POST: api/alumni - Create new alumni (admin only)
+        [HttpPost]
+        [Authorize(Roles = "admin,secretary")]
+        public async Task<IActionResult> CreateAlumni([FromBody] AlumniCreateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Check if user already exists
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "User with this email already exists" });
+
+            // Generate random password
+            var password = GenerateRandomPassword();
+
+            // Create user
+            var user = new User
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Role = "alumni",
+                ContactPhone = dto.ContactPhone,
+                ProfilePhoto = dto.ProfilePhoto,
+                EmailConfirmed = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var result = await _userManager.CreateAsync(user, password);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    message = "Failed to create user",
+                    errors = result.Errors.Select(e => e.Description)
+                });
+            }
+
+            // Create alumni profile
+            var alumni = new Alumni
+            {
+                UserId = user.Id,
+                GraduationYear = dto.GraduationYear,
+                CurrentLocation = dto.CurrentLocation,
+                Bio = dto.Bio,
+                Skills = JsonSerializer.Serialize(dto.Skills),
+                PublicContact = JsonSerializer.Serialize(dto.PublicContact),
+                LinkedProfiles = JsonSerializer.Serialize(dto.LinkedProfiles)
+            };
+
+            _context.Alumnis.Add(alumni);
+            await _context.SaveChangesAsync();
+
+            // Reload with relationships
+            alumni = await _context.Alumnis
+                .Include(a => a.User)
+                .FirstAsync(a => a.UserId == user.Id);
+
+            return Ok(new
+            {
+                message = "Alumni created successfully",
+                alumni = MapToAlumniDto(alumni),
+                credentials = new
+                {
+                    email = user.Email,
+                    temporaryPassword = password
+                }
+            });
+        }
+
         // PUT: api/alumni/{userId} - Update alumni profile (owner or admin)
         [HttpPut("{userId}")]
         public async Task<IActionResult> UpdateAlumniProfile(string userId, [FromBody] AlumniUpdateDto dto)
@@ -136,6 +208,37 @@ namespace Backend.Controllers
                 .FirstAsync(a => a.UserId == userId);
 
             return Ok(MapToAlumniDto(alumnus));
+        }
+
+        // DELETE: api/alumni/{userId} - Delete alumni (admin only)
+        [HttpDelete("{userId}")]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> DeleteAlumni(string userId)
+        {
+            var alumni = await _context.Alumnis
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(a => a.UserId == userId);
+
+            if (alumni == null)
+                return NotFound();
+
+            var user = alumni.User;
+
+            _context.Alumnis.Remove(alumni);
+            await _context.SaveChangesAsync();
+            
+            // Also delete the user account
+            var result = await _userManager.DeleteAsync(user);
+            if (!result.Succeeded)
+            {
+                return BadRequest(new
+                {
+                    message = "Failed to delete user account",
+                    errors = result.Errors.Select(e => e.Description)
+                });
+            }
+
+            return NoContent();
         }
 
         // POST: api/alumni/{userId}/follow
@@ -221,14 +324,13 @@ namespace Backend.Controllers
                 CreatedAt = user.CreatedAt
             };
         }
-    }
 
-    public class AlumniUpdateDto
-    {
-        public string? CurrentLocation { get; set; }
-        public string? Bio { get; set; }
-        public List<string> Skills { get; set; } = new();
-        public Dictionary<string, string> PublicContact { get; set; } = new();
-        public Dictionary<string, string> LinkedProfiles { get; set; } = new();
+        private static string GenerateRandomPassword()
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            var random = new Random();
+            return new string(Enumerable.Repeat(chars, 12)
+                .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
     }
 }
