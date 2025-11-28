@@ -14,6 +14,14 @@ import SundayServices from './pages/SundayServices';
 import Missionaries from './pages/Missionaries';
 import Alumni from './pages/Alumni';
 import Homiletics from './pages/Homiletics';
+import CreateUser from './pages/CreateUser';
+
+// Import the new pages
+import NQF5 from './pages/NQF5';
+import ContinuesLearning from './pages/ContinuesLearning';
+import Outreaches from './pages/Outreaches';
+import Mentorship from './pages/Mentorship';
+import PrayerWall from './pages/PrayerWall';
 
 const AppRoutes = () => {
   const { user } = useAuth();
@@ -36,10 +44,30 @@ const AppRoutes = () => {
         <Route path="missionaries" element={<Missionaries />} />
         <Route path="alumni" element={<Alumni />} />
         <Route path="homiletics" element={<Homiletics />} />
+        
+        {/* New routes for the button navigation */}
+        <Route path="nqf5" element={<NQF5 />} />
+        <Route path="continues-learning" element={<ContinuesLearning />} />
+        <Route path="outreaches" element={<Outreaches />} />
+        <Route path="mentorship" element={<Mentorship />} />
+        <Route path="prayer-wall" element={<PrayerWall />} />
       </Route>
+
+      {/* Create User route (if you want it separate from dashboard) */}
+      <Route path="/users/create" element={
+        <PrivateRoute>
+          <CreateUser />
+        </PrivateRoute>
+      } />
 
       <Route 
         path="/" 
+        element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
+      />
+      
+      {/* Fallback route for undefined paths */}
+      <Route 
+        path="*" 
         element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
       />
     </Routes>

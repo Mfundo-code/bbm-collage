@@ -8,6 +8,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [learningDropdown, setLearningDropdown] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -24,29 +25,46 @@ const DashboardLayout = () => {
     { path: '/dashboard/sunday-services', icon: '⛪', label: 'Sunday Services', description: 'Worship services' },
     { path: '/dashboard/missionaries', icon: '🌍', label: 'Missionaries', description: 'Mission work updates' },
     { path: '/dashboard/alumni', icon: '🎓', label: 'Alumni', description: 'Graduate network' },
-    // Homiletics section has been removed
   ];
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    setLearningDropdown(false);
+  };
+
+  // Unified, subtle palette
+  const PALETTE = {
+    bgSidebar: '#0f1724', // deep charcoal
+    bgMain: '#f7faf9', // very light background
+    primary: '#0ea5a4', // teal
+    primaryDark: '#0b8a7f',
+    mutedText: '#94a3b8',
+    card: '#ffffff',
+    logout: '#374151',
+    logoutHover: '#1f2937',
+  };
 
   const styles = {
     layout: {
-      height: '100vh', // Fixed height instead of minHeight
+      height: '100vh',
       display: 'flex',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      backgroundColor: 'white', // Changed to white
+      backgroundColor: PALETTE.bgMain,
     },
     sidebar: {
       width: isCollapsed ? '80px' : '280px',
-      backgroundColor: '#1e293b',
+      backgroundColor: PALETTE.bgSidebar,
       color: 'white',
       transition: 'width 0.3s ease',
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
       flexShrink: 0,
+      boxShadow: '2px 0 8px rgba(2,6,23,0.2)'
     },
     sidebarHeader: {
       padding: '1.5rem',
-      borderBottom: '1px solid #334155',
+      borderBottom: '1px solid rgba(255,255,255,0.04)',
       display: 'flex',
       alignItems: 'center',
       gap: '0.75rem',
@@ -56,11 +74,12 @@ const DashboardLayout = () => {
       fontWeight: '700',
     },
     siteName: {
-      fontSize: '1.1rem',
+      fontSize: '1.05rem',
       fontWeight: '600',
       opacity: isCollapsed ? 0 : 1,
       transition: 'opacity 0.3s ease',
       whiteSpace: 'nowrap',
+      color: 'rgba(255,255,255,0.92)'
     },
     collapseBtn: {
       position: 'absolute',
@@ -68,7 +87,7 @@ const DashboardLayout = () => {
       right: '1rem',
       background: 'none',
       border: 'none',
-      color: '#cbd5e1',
+      color: 'rgba(203,213,225,0.9)',
       cursor: 'pointer',
       fontSize: '1rem',
       padding: '0.25rem',
@@ -83,20 +102,23 @@ const DashboardLayout = () => {
       display: 'flex',
       alignItems: 'center',
       padding: '0.75rem 1.5rem',
-      color: '#cbd5e1',
+      color: 'rgba(203,213,225,0.9)',
       textDecoration: 'none',
-      transition: 'all 0.2s',
+      transition: 'all 0.15s ease',
       borderLeft: '3px solid transparent',
+      borderRadius: '8px',
+      margin: '0.25rem 0',
     },
     navItemActive: {
-      backgroundColor: '#334155',
-      color: 'white',
-      borderLeftColor: '#3b82f6',
+      backgroundColor: 'rgba(14,165,164,0.08)',
+      color: PALETTE.primary,
+      borderLeftColor: PALETTE.primary,
     },
     navIcon: {
       fontSize: '1.25rem',
       minWidth: '24px',
       textAlign: 'center',
+      opacity: 0.95,
     },
     navLabel: {
       marginLeft: '0.75rem',
@@ -104,18 +126,19 @@ const DashboardLayout = () => {
       opacity: isCollapsed ? 0 : 1,
       transition: 'opacity 0.3s ease',
       whiteSpace: 'nowrap',
+      color: 'rgba(255,255,255,0.95)'
     },
     navDescription: {
       fontSize: '0.75rem',
-      color: '#94a3b8',
+      color: PALETTE.mutedText,
       marginTop: '0.25rem',
       opacity: isCollapsed ? 0 : 1,
       transition: 'opacity 0.3s ease',
     },
     userSection: {
       padding: '1.5rem',
-      borderTop: '1px solid #334155',
-      backgroundColor: '#0f172a',
+      borderTop: '1px solid rgba(255,255,255,0.03)',
+      backgroundColor: 'transparent',
     },
     userInfo: {
       display: 'flex',
@@ -126,38 +149,41 @@ const DashboardLayout = () => {
       transition: 'opacity 0.3s ease',
     },
     userAvatar: {
-      width: '40px',
-      height: '40px',
-      borderRadius: '50%',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      width: '44px',
+      height: '44px',
+      borderRadius: '10px',
+      background: PALETTE.primary,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontWeight: '600',
-      fontSize: '0.9rem',
+      fontWeight: '700',
+      fontSize: '0.95rem',
+      color: 'white',
+      boxShadow: '0 6px 12px rgba(14,165,164,0.12)'
     },
     userDetails: {
       flex: 1,
     },
     userName: {
-      fontWeight: '600',
-      fontSize: '0.9rem',
+      fontWeight: '700',
+      fontSize: '0.95rem',
+      color: 'rgba(255,255,255,0.95)'
     },
     userRole: {
       fontSize: '0.75rem',
-      color: '#94a3b8',
+      color: PALETTE.mutedText,
       textTransform: 'capitalize',
     },
     logoutBtn: {
       width: '100%',
-      backgroundColor: '#dc2626',
+      backgroundColor: PALETTE.logout,
       color: 'white',
       border: 'none',
-      padding: '0.75rem',
-      borderRadius: '6px',
+      padding: '0.65rem',
+      borderRadius: '8px',
       fontWeight: '600',
       cursor: 'pointer',
-      transition: 'background-color 0.2s',
+      transition: 'background-color 0.15s',
       fontSize: '0.9rem',
     },
     main: {
@@ -165,26 +191,68 @@ const DashboardLayout = () => {
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
-      backgroundColor: 'white', // Added white background
+      backgroundColor: PALETTE.bgMain,
     },
-    topHeader: {
-      backgroundColor: 'white',
-      borderBottom: '1px solid #e2e8f0',
-      padding: '1rem 2rem',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-      flexShrink: 0, // Prevent header from shrinking
+    /* UPDATED: align buttons to the right and use the unified primary */
+    buttonBar: {
+      display: 'flex',
+      gap: '1rem',
+      padding: '1.25rem 2rem',
+      backgroundColor: PALETTE.bgMain,
+      borderBottom: '1px solid rgba(16,24,32,0.04)',
+      flexWrap: 'wrap',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
     },
-    pageTitle: {
-      fontSize: '1.5rem',
-      fontWeight: '600',
-      color: '#1e293b',
-      margin: 0,
+    buttonContainer: {
+      position: 'relative',
+    },
+    mainButton: {
+      backgroundColor: PALETTE.primary,
+      color: 'white',
+      border: 'none',
+      padding: '0.6rem 1.2rem',
+      borderRadius: '10px',
+      fontWeight: '700',
+      cursor: 'pointer',
+      fontSize: '0.95rem',
+      transition: 'transform 0.08s ease, box-shadow 0.12s ease',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      boxShadow: '0 8px 20px rgba(14,165,164,0.08)'
+    },
+    /* UPDATED: position dropdown to align with the right edge */
+    dropdown: {
+      position: 'absolute',
+      top: '100%',
+      left: 'auto',
+      right: 0,
+      backgroundColor: PALETTE.card,
+      border: '1px solid rgba(2,6,23,0.06)',
+      borderRadius: '8px',
+      boxShadow: '0 6px 18px rgba(2,6,23,0.06)',
+      zIndex: 1000,
+      minWidth: '200px',
+      marginTop: '0.5rem',
+    },
+    dropdownItem: {
+      display: 'block',
+      width: '100%',
+      padding: '0.75rem 1rem',
+      border: 'none',
+      backgroundColor: 'transparent',
+      textAlign: 'left',
+      cursor: 'pointer',
+      fontSize: '0.95rem',
+      color: '#0f1724',
+      transition: 'background-color 0.12s',
     },
     content: {
       flex: 1,
       padding: '2rem',
-      overflowY: 'auto', // This will make content scrollable
-      backgroundColor: 'white', // Changed to white
+      overflowY: 'auto',
+      backgroundColor: PALETTE.bgMain,
     },
   };
 
@@ -215,14 +283,14 @@ const DashboardLayout = () => {
               }}
               onMouseEnter={(e) => {
                 if (!isActive(item.path)) {
-                  e.currentTarget.style.backgroundColor = '#334155';
-                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.backgroundColor = 'rgba(14,165,164,0.04)';
+                  e.currentTarget.style.color = PALETTE.primary;
                 }
               }}
               onMouseLeave={(e) => {
                 if (!isActive(item.path)) {
                   e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = '#cbd5e1';
+                  e.currentTarget.style.color = 'rgba(203,213,225,0.9)';
                 }
               }}
             >
@@ -254,21 +322,77 @@ const DashboardLayout = () => {
           <button 
             onClick={handleLogout}
             style={styles.logoutBtn}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#b91c1c'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#dc2626'}
+            onMouseEnter={(e) => e.target.style.backgroundColor = PALETTE.logoutHover}
+            onMouseLeave={(e) => e.target.style.backgroundColor = PALETTE.logout}
           >
-            {isCollapsed ? '🚪' : 'Logout'}
+            {isCollapsed ? '🚪' : 'Sign out'}
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <main style={styles.main}>
-        <div style={styles.topHeader}>
-          <h1 style={styles.pageTitle}>
-            {menuItems.find(item => isActive(item.path))?.label || 'Dashboard'}
-          </h1>
+        {/* Button Bar */}
+        <div style={styles.buttonBar}>
+          <div style={styles.buttonContainer}>
+            <button 
+              style={styles.mainButton}
+              onClick={() => setLearningDropdown(!learningDropdown)}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+            >
+              📚 Learning {learningDropdown ? '▲' : '▼'}
+            </button>
+            {learningDropdown && (
+              <div style={styles.dropdown}>
+                <button 
+                  style={styles.dropdownItem}
+                  onClick={() => handleNavigation('/dashboard/nqf5')}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f6f5'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  NQF 5
+                </button>
+                <button 
+                  style={styles.dropdownItem}
+                  onClick={() => handleNavigation('/dashboard/continues-learning')}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f6f5'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                >
+                  Continues Learning
+                </button>
+              </div>
+            )}
+          </div>
+          
+          <button 
+            style={styles.mainButton}
+            onClick={() => handleNavigation('/dashboard/outreaches')}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+          >
+            🌍 Outreaches
+          </button>
+          
+          <button 
+            style={styles.mainButton}
+            onClick={() => handleNavigation('/dashboard/mentorship')}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+          >
+            👥 Mentorship
+          </button>
+          
+          <button 
+            style={styles.mainButton}
+            onClick={() => handleNavigation('/dashboard/prayer-wall')}
+            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+          >
+            🙏 Prayer Wall
+          </button>
         </div>
+
         <div style={styles.content}>
           <Outlet />
         </div>

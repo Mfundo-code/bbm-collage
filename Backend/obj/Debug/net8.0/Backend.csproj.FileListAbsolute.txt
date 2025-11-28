@@ -158,3 +158,4 @@ C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\3a1d73c5-bd
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\762c2247-3a91-4d5f-97f4-fa91eb7edd7e.jpg
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\824aaf20-f06d-4ffb-ab0d-c1e84c346d9c.jpg
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\eee688df-dfd9-43f7-b219-fb409937305c.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\a7a824e9-79c3-40e3-aaee-5f44405c0f9d.jpg
