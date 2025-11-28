@@ -26,6 +26,8 @@ namespace Backend.Models
         public DbSet<AuditLog> AuditLogs { get; set; }
         public DbSet<Donation> Donations { get; set; }
         public DbSet<DonationCampaign> DonationCampaigns { get; set; }
+        public DbSet<Outreach> Outreaches { get; set; }
+        public DbSet<OutreachReport> OutreachReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -172,6 +174,22 @@ namespace Backend.Models
                 entity.HasIndex(e => e.CreatedAt);
                 entity.Property(e => e.GoalAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.CurrentAmount).HasColumnType("decimal(18,2)");
+            });
+
+            // Outreach configuration
+            modelBuilder.Entity<Outreach>(entity =>
+            {
+                entity.ToTable("Outreaches");
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
+            });
+
+            // OutreachReport configuration
+            modelBuilder.Entity<OutreachReport>(entity =>
+            {
+                entity.ToTable("OutreachReports");
+                entity.HasIndex(e => e.OutreachId);
+                entity.HasIndex(e => e.CreatedAt);
             });
         }
     }

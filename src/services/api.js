@@ -189,6 +189,33 @@ export const donationsAPI = {
     api.post('/donations/campaigns', data),
 };
 
+// Add this to your existing exports in api.js
+export const outreachesAPI = {
+  getOutreaches: (params = {}) => 
+    api.get('/outreaches', { params }),
+  
+  getOutreach: (id) => 
+    api.get(`/outreaches/${id}`),
+  
+  createOutreach: (data) => 
+    api.post('/outreaches', data),
+  
+  updateOutreach: (id, data) => 
+    api.put(`/outreaches/${id}`, data),
+  
+  deleteOutreach: (id) => 
+    api.delete(`/outreaches/${id}`),
+  
+  createReport: (outreachId, data) => 
+    api.post(`/outreaches/${outreachId}/reports`, data),
+  
+  getReports: (outreachId) => 
+    api.get(`/outreaches/${outreachId}/reports`),
+  
+  deleteReport: (reportId) => 
+    api.delete(`/outreaches/reports/${reportId}`),
+};
+
 export const uploadAPI = {
   uploadFile: (formData, onProgress = null) => {
     const config = {

@@ -1,117 +1,245 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { outreachesAPI } from '../services/api';
+import { fileUpload } from '../services/fileUpload';
 
-// NOTE: Logic preserved from original Outreaches.js — UI/UX restyled to match the Home.fixed.jsx design tokens.
 const Outreaches = () => {
   const { canManagePosts, user } = useAuth() || {};
 
-  const mockOutreaches = [
-    {
-      id: 1,
-      title: 'Local Community Outreach',
-      status: 'ongoing',
-      location: 'Surrounding communities',
-      leader: 'Pastor John M.',
-      activities: ['Food distribution', "Children's programs", 'Counseling'],
-      description: 'Weekly food & support for families in township areas.',
-      photos: [],
-      reports: [],
-    },
-    {
-      id: 2,
-      title: 'Youth Evangelism',
-      status: 'ongoing',
-      location: 'Schools and youth centers',
-      leader: 'Sister Thandi',
-      activities: ['Sports ministry', 'Bible studies', 'Career guidance'],
-      description: 'Engaging youth through sports and mentorship.',
-      photos: [],
-      reports: [],
-    },
-    {
-      id: 3,
-      title: 'Medical Missions',
-      status: 'completed',
-      location: 'Rural clinics',
-      leader: 'Dr. Moyo',
-      activities: ['Free clinics', 'Health education'],
-      description: 'Month-long medical mission that served three villages.',
-      photos: [],
-      reports: [
-        {
-          id: 1,
-          title: 'Medical mission summary',
-          author: 'Dr. Moyo',
-          description: 'We saw 420 patients. Kids received vaccines and health education was given.',
-          photos: [],
-          createdAt: new Date().toISOString(),
-        },
-        {
-          id: 2,
-          title: 'Week 1 Report',
-          author: 'Dr. Moyo',
-          description: 'First week completed successfully. We set up clinics in two villages and served 150 patients.',
-          photos: [],
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    },
-  ];
-
-  // --- State (logic unchanged) ---
-  const [outreaches, setOutreaches] = useState(mockOutreaches);
+  // State
+  const [outreaches, setOutreaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('ongoing');
   const [selected, setSelected] = useState(null);
 
+  // Report states
   const [isReporting, setIsReporting] = useState(false);
-  const [reportData, setReportData] = useState({ title: '', description: '', leader: '', activities: '' });
+  const [reportData, setReportData] = useState({ title: '', description: '', leader: '' });
   const [reportPhotos, setReportPhotos] = useState([]);
-  const fileInputRef = useRef(null);
+  const [submitting, setSubmitting] = useState(false);
 
+  // Outreach creation states
+  const [isCreatingOutreach, setIsCreatingOutreach] = useState(false);
+  const [outreachData, setOutreachData] = useState({
+    title: '',
+    status: 'ongoing',
+    location: '',
+    leader: '',
+    description: '',
+    photos: []
+  });
+  const [outreachPhotos, setOutreachPhotos] = useState([]);
+  const [creatingOutreach, setCreatingOutreach] = useState(false);
+
+  const fileInputRef = useRef(null);
+  const outreachFileInputRef = useRef(null);
+
+  // Fetch outreaches from API
+  const fetchOutreaches = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await outreachesAPI.getOutreaches();
+      setOutreaches(response.data);
+    } catch (err) {
+      console.error('Error fetching outreaches:', err);
+      setError('Failed to load outreaches. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOutreaches();
+  }, []);
+
+  // Report functions
   const openReport = (outreach) => {
+    if (!outreach) {
+      setError('Please select an outreach first');
+      return;
+    }
+
     setSelected(outreach);
     setReportData({
-      title: '',
+      title: `Report for ${outreach.title}`,
       description: '',
-      leader: outreach.leader || '',
-      activities: outreach.activities.join(', '),
+      leader: outreach.leader || ''
     });
     setReportPhotos([]);
     setIsReporting(true);
+    setError('');
   };
 
-  const onFilesPicked = (files) => {
-    const arr = Array.from(files).map((file) => ({ file, url: URL.createObjectURL(file) }));
-    setReportPhotos((p) => [...p, ...arr]);
+  const onFilesPicked = async (files) => {
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        try {
+          const uploadedUrl = await fileUpload.uploadFile(file);
+          return { file, url: uploadedUrl };
+        } catch (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw uploadError;
+        }
+      });
+
+      const uploadedPhotos = await Promise.all(uploadPromises);
+      setReportPhotos((p) => [...p, ...uploadedPhotos]);
+    } catch (err) {
+      console.error('Error uploading files:', err);
+      setError('Failed to upload some photos. Please try again.');
+    }
   };
 
   const handlePhotoClick = () => fileInputRef.current?.click();
 
   const removePhoto = (index) => {
-    setReportPhotos((p) => {
-      const removed = p[index];
-      if (removed) URL.revokeObjectURL(removed.url);
-      return p.filter((_, i) => i !== index);
-    });
+    setReportPhotos((p) => p.filter((_, i) => i !== index));
   };
 
-  const submitReport = () => {
-    if (!selected) return;
-    const newReport = {
-      id: Date.now(),
-      title: reportData.title || `Report by ${user?.firstName || 'Admin'}`,
-      author: user?.firstName ? `${user.firstName} ${user.lastName || ''}` : 'Admin',
-      description: reportData.description,
-      photos: reportPhotos.map((p) => p.url),
-      createdAt: new Date().toISOString(),
-    };
+  const submitReport = async () => {
+    if (!selected || submitting) return;
 
-    setOutreaches((list) =>
-      list.map((o) => (o.id === selected.id ? { ...o, reports: [newReport, ...(o.reports || [])] } : o))
-    );
+    try {
+      setSubmitting(true);
+      setError('');
 
-    setIsReporting(false);
-    setSelected(null);
+      if (!reportData.description.trim()) {
+        setError('Please provide a description for the report');
+        return;
+      }
+
+      const reportPayload = {
+        title: reportData.title || `Report for ${selected.title}`,
+        description: reportData.description,
+        photos: reportPhotos.map((p) => p.url)
+      };
+
+      await outreachesAPI.createReport(selected.id, reportPayload);
+
+      await fetchOutreaches();
+
+      setIsReporting(false);
+      setSelected(null);
+      setReportPhotos([]);
+      setError('');
+    } catch (err) {
+      console.error('Error submitting report:', err);
+      setError('Failed to submit report. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Outreach creation functions
+  const openCreateOutreach = () => {
+    setIsCreatingOutreach(true);
+    setOutreachData({
+      title: '',
+      status: 'ongoing',
+      location: '',
+      leader: '',
+      description: '',
+      photos: []
+    });
+    setOutreachPhotos([]);
+    setError('');
+  };
+
+  const closeCreateOutreach = () => {
+    setIsCreatingOutreach(false);
+    setOutreachData({
+      title: '',
+      status: 'ongoing',
+      location: '',
+      leader: '',
+      description: '',
+      photos: []
+    });
+    setOutreachPhotos([]);
+  };
+
+  const handleOutreachInputChange = (e) => {
+    const { name, value } = e.target;
+    setOutreachData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const onOutreachFilesPicked = async (files) => {
+    try {
+      const uploadPromises = Array.from(files).map(async (file) => {
+        try {
+          const uploadedUrl = await fileUpload.uploadFile(file);
+          return { file, url: uploadedUrl };
+        } catch (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw uploadError;
+        }
+      });
+
+      const uploadedPhotos = await Promise.all(uploadPromises);
+      setOutreachPhotos((p) => [...p, ...uploadedPhotos]);
+    } catch (err) {
+      console.error('Error uploading files:', err);
+      setError('Failed to upload some photos. Please try again.');
+    }
+  };
+
+  const handleOutreachPhotoClick = () => outreachFileInputRef.current?.click();
+
+  const removeOutreachPhoto = (index) => {
+    setOutreachPhotos((p) => p.filter((_, i) => i !== index));
+  };
+
+  const submitOutreach = async () => {
+    if (creatingOutreach) return;
+
+    try {
+      setCreatingOutreach(true);
+      setError('');
+
+      // Validation
+      if (!outreachData.title.trim()) {
+        setError('Please provide a title for the outreach');
+        return;
+      }
+      if (!outreachData.location.trim()) {
+        setError('Please provide a location for the outreach');
+        return;
+      }
+      if (!outreachData.leader.trim()) {
+        setError('Please provide a leader for the outreach');
+        return;
+      }
+      if (!outreachData.description.trim()) {
+        setError('Please provide a description for the outreach');
+        return;
+      }
+
+      const outreachPayload = {
+        title: outreachData.title,
+        status: outreachData.status,
+        location: outreachData.location,
+        leader: outreachData.leader,
+        description: outreachData.description,
+        photos: outreachPhotos.map((p) => p.url)
+      };
+
+      await outreachesAPI.createOutreach(outreachPayload);
+
+      await fetchOutreaches();
+
+      closeCreateOutreach();
+      setError('');
+    } catch (err) {
+      console.error('Error creating outreach:', err);
+      setError('Failed to create outreach. Please try again.');
+    } finally {
+      setCreatingOutreach(false);
+    }
   };
 
   const showDetails = (outreach) => setSelected(outreach);
@@ -121,13 +249,17 @@ const Outreaches = () => {
   };
   const closeReport = () => {
     setIsReporting(false);
-    // keep selected open in details view as original
+    setError('');
   };
 
-  // --- New design tokens and styles inspired by Home.fixed.jsx ---
+  // Filter outreaches based on active tab
+  const filtered = outreaches.filter((o) => o.status === activeTab);
+
+  // Design tokens and styles (kept the same)
   const PRIMARY = '#06b6d4';
   const PRIMARY_HOVER = '#0aa9c3';
   const DANGER = '#ef4444';
+  const SUCCESS = '#10b981';
 
   const styles = {
     page: { maxWidth: '980px', margin: '0 auto', width: '100%', fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', padding: '2rem' },
@@ -149,11 +281,13 @@ const Outreaches = () => {
     description: { color: '#334155', lineHeight: 1.6 },
 
     actions: { display: 'flex', gap: 10, marginTop: 'auto', justifyContent: 'flex-end' },
-    btn: { padding: '0.55rem 0.9rem', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14 },
+    btn: { padding: '0.55rem 0.9rem', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14, transition: 'all 0.2s ease' },
     btnPrimary: { background: PRIMARY, color: 'white' },
+    btnSuccess: { background: SUCCESS, color: 'white' },
     btnGhost: { background: 'transparent', color: '#0f1724', border: '1px solid #e6eef8' },
 
-    // modal (details/report) will follow Home.fixed visual language
+    headerActions: { display: 'flex', gap: 10 },
+
     overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(2,6,23,0.45)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: 20 },
     modal: { background: 'white', borderRadius: 12, padding: '1.25rem', width: 'min(920px,95%)', maxHeight: '90vh', overflowY: 'auto' },
     modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
@@ -169,21 +303,34 @@ const Outreaches = () => {
     reportCard: { background: '#ffffff', padding: 16, borderRadius: 10, marginBottom: 12, border: '1px solid #eef2f7' },
 
     formContainer: { display: 'flex', flexDirection: 'column', gap: 12 },
+    formRow: { display: 'flex', flexDirection: 'column', gap: 8 },
     label: { fontWeight: 700, color: '#0f172a', marginBottom: 6 },
-    input: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem' },
-    textarea: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem', minHeight: 120, resize: 'vertical' },
+    input: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem', width: '100%' },
+    textarea: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem', minHeight: 120, resize: 'vertical', width: '100%' },
+    select: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem', width: '100%', background: 'white' },
 
     addPhotosBox: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120, borderRadius: 8, border: '2px dashed #e6eef8', cursor: 'pointer', background: '#fafafa' },
     smallMuted: { fontSize: 13, color: '#64748b' },
 
-    modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 }
+    modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 },
+    loading: { textAlign: 'center', padding: '2rem', color: '#64748b' },
+    error: { background: '#fef2f2', color: '#dc2626', padding: '1rem', borderRadius: 8, marginBottom: '1rem' }
   };
 
-  const filtered = outreaches.filter((o) => o.status === activeTab);
   const [hoveredCard, setHoveredCard] = useState(null);
+
+  if (loading) {
+    return (
+      <div style={styles.page}>
+        <div style={styles.loading}>Loading outreaches...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.page}>
+      {error && <div style={styles.error}>{error}</div>}
+
       <div style={styles.header}>
         <div style={styles.titleWrap}>
           <h1 style={styles.title}>Outreaches & Missions</h1>
@@ -195,20 +342,32 @@ const Outreaches = () => {
         </div>
 
         {(typeof canManagePosts === 'function' ? canManagePosts() : canManagePosts) && (
-          <button
-            style={{ ...styles.btn, ...styles.btnPrimary }}
-            onClick={() => {
-              // Open a lightweight "create quick report" for admins — keep original logic: openReport expects an outreach
-              // In this layout we simply scroll to top or can open the first outreach report modal if desired. We'll open the reporting overlay while keeping logic unchanged.
-              if (filtered[0]) openReport(filtered[0]);
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PRIMARY_HOVER)}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PRIMARY)}
-          >
-            + Add Report
-          </button>
+          <div style={styles.headerActions}>
+            <button
+              style={{ ...styles.btn, ...styles.btnSuccess }}
+              onClick={openCreateOutreach}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#0da271')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = SUCCESS)}
+            >
+              + Create Outreach
+            </button>
+          </div>
         )}
       </div>
+
+      {filtered.length === 0 && (
+        <div style={{
+          textAlign: 'center',
+          padding: '3rem',
+          color: '#64748b',
+          background: '#f8fafc',
+          borderRadius: '12px',
+          marginTop: '1rem'
+        }}>
+          <h3>No {activeTab} outreaches found</h3>
+          <p>Create your first outreach to get started!</p>
+        </div>
+      )}
 
       <div style={styles.grid}>
         {filtered.map((o) => (
@@ -228,21 +387,24 @@ const Outreaches = () => {
 
             <div style={styles.description}>{o.description}</div>
 
-            <div style={{ marginTop: 8 }}>
-              <div style={styles.smallMuted}><strong>Activities:</strong> {o.activities.join(', ')}</div>
-            </div>
-
             <div style={styles.actions}>
               <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={() => showDetails(o)}>View Details</button>
               {(typeof canManagePosts === 'function' ? canManagePosts() : canManagePosts) && (
-                <button style={{ ...styles.btn, ...styles.btnPrimary }} onClick={() => openReport(o)} onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PRIMARY_HOVER)} onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PRIMARY)}>Report</button>
+                <button
+                  style={{ ...styles.btn, ...styles.btnPrimary }}
+                  onClick={() => openReport(o)}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PRIMARY_HOVER)}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PRIMARY)}
+                >
+                  Report
+                </button>
               )}
             </div>
           </div>
         ))}
       </div>
 
-      {/* Details Modal (styled like Home.fixed) */}
+      {/* Details Modal */}
       {selected && !isReporting && (
         <div style={styles.overlay} onClick={closeDetails}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -260,10 +422,6 @@ const Outreaches = () => {
 
               <div style={{ marginTop: 12 }}>
                 <div style={styles.twoCol}>
-                  <div>
-                    <div style={styles.label}>Activities</div>
-                    <div>{selected.activities.join(', ')}</div>
-                  </div>
                   <div>
                     <div style={styles.label}>Reports</div>
                     <div>{(selected.reports || []).length} report(s)</div>
@@ -320,7 +478,7 @@ const Outreaches = () => {
         </div>
       )}
 
-      {/* Report Modal (styled like Home.fixed) */}
+      {/* Report Modal */}
       {isReporting && (
         <div style={styles.overlay} onClick={closeReport}>
           <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -330,28 +488,27 @@ const Outreaches = () => {
             </div>
 
             <div style={styles.formContainer}>
-              <div>
+              <div style={styles.formRow}>
                 <label style={styles.label}>Title</label>
-                <input style={styles.input} value={reportData.title} onChange={(e) => setReportData((s) => ({ ...s, title: e.target.value }))} placeholder="Short title for this report" />
+                <input
+                  style={styles.input}
+                  value={reportData.title}
+                  onChange={(e) => setReportData((s) => ({ ...s, title: e.target.value }))}
+                  placeholder="Short title for this report"
+                />
               </div>
 
-              <div>
+              <div style={styles.formRow}>
                 <label style={styles.label}>Description</label>
-                <textarea style={styles.textarea} value={reportData.description} onChange={(e) => setReportData((s) => ({ ...s, description: e.target.value }))} placeholder="What happened / what is happening" />
+                <textarea
+                  style={styles.textarea}
+                  value={reportData.description}
+                  onChange={(e) => setReportData((s) => ({ ...s, description: e.target.value }))}
+                  placeholder="What happened / what is happening"
+                />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <div>
-                  <label style={styles.label}>Leader</label>
-                  <input style={styles.input} value={reportData.leader} onChange={(e) => setReportData((s) => ({ ...s, leader: e.target.value }))} placeholder="Name of the outreach leader" />
-                </div>
-                <div>
-                  <label style={styles.label}>Activities (comma separated)</label>
-                  <input style={styles.input} value={reportData.activities} onChange={(e) => setReportData((s) => ({ ...s, activities: e.target.value }))} placeholder="e.g. Food distribution, Counseling" />
-                </div>
-              </div>
-
-              <div>
+              <div style={styles.formRow}>
                 <label style={styles.label}>Photos</label>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
                   <div>
@@ -367,13 +524,40 @@ const Outreaches = () => {
                         reportPhotos.map((p, i) => (
                           <div key={i} style={{ position: 'relative' }}>
                             <img src={p.url} alt={`preview-${i}`} style={styles.photoThumb} />
-                            <button onClick={() => removePhoto(i)} style={{ position: 'absolute', top: -8, right: -8, background: DANGER, color: 'white', border: 'none', borderRadius: '50%', width: 22, height: 22, cursor: 'pointer' }}>×</button>
+                            <button
+                              onClick={() => removePhoto(i)}
+                              style={{
+                                position: 'absolute',
+                                top: -8,
+                                right: -8,
+                                background: DANGER,
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: 22,
+                                height: 22,
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              ×
+                            </button>
                           </div>
                         ))
                       )}
                     </div>
 
-                    <input ref={fileInputRef} type="file" multiple accept="image/*" style={{ display: 'none' }} onChange={(e) => onFilesPicked(e.target.files)} />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => onFilesPicked(e.target.files)}
+                    />
                   </div>
 
                   <div>
@@ -388,11 +572,166 @@ const Outreaches = () => {
               <div style={styles.modalActions}>
                 <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={closeReport}>Cancel</button>
                 <button
-                  style={{ ...styles.btn, ...styles.btnPrimary, ...((!reportData.description && reportPhotos.length === 0) ? { opacity: 0.6, cursor: 'not-allowed' } : {}) }}
+                  style={{
+                    ...styles.btn,
+                    ...styles.btnPrimary,
+                    ...((!reportData.description && reportPhotos.length === 0) || submitting ? { opacity: 0.6, cursor: 'not-allowed' } : {})
+                  }}
                   onClick={submitReport}
-                  disabled={!reportData.description && reportPhotos.length === 0}
+                  disabled={(!reportData.description && reportPhotos.length === 0) || submitting}
                 >
-                  Submit Report
+                  {submitting ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Outreach Modal */}
+      {isCreatingOutreach && (
+        <div style={styles.overlay} onClick={closeCreateOutreach}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <div style={styles.modalTitle}>Create New Outreach</div>
+              <button style={styles.closeBtn} onClick={closeCreateOutreach}>×</button>
+            </div>
+
+            <div style={styles.formContainer}>
+              <div style={styles.twoCol}>
+                <div style={styles.formRow}>
+                  <label style={styles.label}>Title *</label>
+                  <input
+                    style={styles.input}
+                    name="title"
+                    value={outreachData.title}
+                    onChange={handleOutreachInputChange}
+                    placeholder="Outreach mission title"
+                  />
+                </div>
+
+                <div style={styles.formRow}>
+                  <label style={styles.label}>Status</label>
+                  <select
+                    style={styles.select}
+                    name="status"
+                    value={outreachData.status}
+                    onChange={handleOutreachInputChange}
+                  >
+                    <option value="ongoing">Ongoing</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={styles.twoCol}>
+                <div style={styles.formRow}>
+                  <label style={styles.label}>Location *</label>
+                  <input
+                    style={styles.input}
+                    name="location"
+                    value={outreachData.location}
+                    onChange={handleOutreachInputChange}
+                    placeholder="Where is this outreach happening?"
+                  />
+                </div>
+
+                <div style={styles.formRow}>
+                  <label style={styles.label}>Leader *</label>
+                  <input
+                    style={styles.input}
+                    name="leader"
+                    value={outreachData.leader}
+                    onChange={handleOutreachInputChange}
+                    placeholder="Who is leading this outreach?"
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formRow}>
+                <label style={styles.label}>Description *</label>
+                <textarea
+                  style={styles.textarea}
+                  name="description"
+                  value={outreachData.description}
+                  onChange={handleOutreachInputChange}
+                  placeholder="Describe the outreach mission, goals, and impact"
+                />
+              </div>
+
+              <div style={styles.formRow}>
+                <label style={styles.label}>Photos</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
+                  <div>
+                    <div style={styles.photosRow}>
+                      {outreachPhotos.length === 0 ? (
+                        <div style={styles.addPhotosBox} onClick={handleOutreachPhotoClick}>
+                          <div style={{ textAlign: 'center', color: '#64748b' }}>
+                            <div style={{ fontSize: 20 }}>+</div>
+                            <div style={{ fontSize: 12 }}>Add Photos</div>
+                          </div>
+                        </div>
+                      ) : (
+                        outreachPhotos.map((p, i) => (
+                          <div key={i} style={{ position: 'relative' }}>
+                            <img src={p.url} alt={`preview-${i}`} style={styles.photoThumb} />
+                            <button
+                              onClick={() => removeOutreachPhoto(i)}
+                              style={{
+                                position: 'absolute',
+                                top: -8,
+                                right: -8,
+                                background: DANGER,
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: 22,
+                                height: 22,
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <input
+                      ref={outreachFileInputRef}
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={(e) => onOutreachFilesPicked(e.target.files)}
+                    />
+                  </div>
+
+                  <div>
+                    <div style={styles.smallMuted}>Add photos to showcase the outreach location or previous activities</div>
+                    <div style={{ marginTop: 12 }}>
+                      <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={handleOutreachPhotoClick}>Choose photos</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={styles.modalActions}>
+                <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={closeCreateOutreach}>Cancel</button>
+                <button
+                  style={{
+                    ...styles.btn,
+                    ...styles.btnSuccess,
+                    ...(creatingOutreach ? { opacity: 0.6, cursor: 'not-allowed' } : {})
+                  }}
+                  onClick={submitOutreach}
+                  disabled={creatingOutreach}
+                >
+                  {creatingOutreach ? 'Creating...' : 'Create Outreach'}
                 </button>
               </div>
             </div>
