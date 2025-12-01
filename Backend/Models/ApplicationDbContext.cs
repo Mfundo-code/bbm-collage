@@ -128,6 +128,9 @@ namespace Backend.Models
             {
                 entity.ToTable("PrayerRequests");
                 entity.HasIndex(e => e.Urgency);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.MissionaryId);
+                entity.HasIndex(e => e.PostedById);
                 entity.HasIndex(e => e.CreatedAt);
             });
 

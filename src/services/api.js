@@ -216,6 +216,43 @@ export const outreachesAPI = {
     api.delete(`/outreaches/reports/${reportId}`),
 };
 
+
+// Update the prayerWallAPI section
+export const prayerWallAPI = {
+  // Prayer Requests
+  getRequests: (params = {}) => 
+    api.get('/prayerwall', { params }),
+  
+  getRequest: (id) => 
+    api.get(`/prayerwall/${id}`),
+  
+  createRequest: (data) => 
+    api.post('/prayerwall', data),
+  
+  updateRequest: (id, data) => 
+    api.put(`/prayerwall/${id}`, data),
+  
+  deleteRequest: (id) => 
+    api.delete(`/prayerwall/${id}`),
+  
+  // Pray
+  prayForRequest: (id) => 
+    api.post(`/prayerwall/${id}/pray`),
+  
+  // Mark as answered
+  markAsAnswered: (id) => 
+    api.patch(`/prayerwall/${id}/mark-answered`),
+  
+  // Stats
+  getStats: () => 
+    api.get('/prayerwall/stats'),
+  
+  // User requests
+  getMyRequests: (params = {}) => 
+    api.get('/prayerwall/my-requests', { params }),
+};
+
+
 export const uploadAPI = {
   uploadFile: (formData, onProgress = null) => {
     const config = {
