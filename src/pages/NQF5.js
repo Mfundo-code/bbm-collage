@@ -4,92 +4,81 @@ import React from 'react';
 const NQF5 = () => {
   const styles = {
     page: {
-      minHeight: '80vh',
+      minHeight: '70vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: '#f0fdf4',
-      padding: '2rem',
+      padding: '1.5rem',
       fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
     },
     container: {
-      maxWidth: '500px',
+      maxWidth: '450px',
       textAlign: 'center',
-      padding: '3rem',
+      padding: '2rem',
       backgroundColor: 'white',
-      borderRadius: '20px',
-      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+      borderRadius: '16px',
+      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.05)',
       border: '1px solid #dcfce7'
     },
     iconContainer: {
-      width: '100px',
-      height: '100px',
+      width: '80px',
+      height: '80px',
       backgroundColor: '#dcfce7',
       borderRadius: '50%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      margin: '0 auto 2rem',
-      border: '3px solid #bbf7d0'
+      margin: '0 auto 1.5rem',
+      border: '2px solid #bbf7d0'
     },
     icon: {
-      fontSize: '3rem',
+      fontSize: '2.5rem',
       color: '#16a34a'
     },
     title: {
-      fontSize: '2rem',
+      fontSize: '1.75rem',
       color: '#166534',
-      marginBottom: '1rem',
+      marginBottom: '0.75rem',
       fontWeight: 700
     },
     message: {
-      fontSize: '1.1rem',
+      fontSize: '1rem',
       color: '#4b5563',
-      lineHeight: 1.6,
-      marginBottom: '2rem'
+      lineHeight: 1.5,
+      marginBottom: '1.5rem'
     },
     progressBar: {
       width: '100%',
-      height: '8px',
+      height: '6px',
       backgroundColor: '#e5e7eb',
-      borderRadius: '4px',
+      borderRadius: '3px',
       overflow: 'hidden',
-      margin: '2rem auto'
+      margin: '1.5rem auto'
     },
     progressFill: {
       width: '65%',
       height: '100%',
       backgroundColor: '#22c55e',
-      borderRadius: '4px',
+      borderRadius: '3px',
       animation: 'pulse 2s ease-in-out infinite'
     },
     status: {
       display: 'inline-block',
       backgroundColor: '#dcfce7',
       color: '#166534',
-      padding: '0.5rem 1.5rem',
+      padding: '0.4rem 1.25rem',
       borderRadius: '999px',
-      fontSize: '0.9rem',
+      fontSize: '0.85rem',
       fontWeight: 600,
-      marginTop: '1rem',
+      marginTop: '0.75rem',
       border: '1px solid #bbf7d0'
     },
     comingSoon: {
-      marginTop: '2rem',
+      marginTop: '1.5rem',
       color: '#6b7280',
-      fontSize: '0.95rem',
+      fontSize: '0.9rem',
       fontStyle: 'italic'
-    },
-    // Animation keyframes
-    keyframes: {
-      '@keyframes pulse': {
-        '0%, 100%': {
-          opacity: 1
-        },
-        '50%': {
-          opacity: 0.7
-        }
-      }
     }
   };
 
