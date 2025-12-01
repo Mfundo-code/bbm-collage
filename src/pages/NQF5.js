@@ -4,76 +4,132 @@ import React from 'react';
 const NQF5 = () => {
   const styles = {
     page: {
-      maxWidth: '1200px',
-      margin: '0 auto',
+      minHeight: '80vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#f0fdf4',
+      padding: '2rem',
+      fontFamily: 'Inter, system-ui, -apple-system, sans-serif'
     },
-    header: {
-      marginBottom: '2rem',
+    container: {
+      maxWidth: '500px',
+      textAlign: 'center',
+      padding: '3rem',
+      backgroundColor: 'white',
+      borderRadius: '20px',
+      boxShadow: '0 10px 30px rgba(0, 0, 0, 0.05)',
+      border: '1px solid #dcfce7'
+    },
+    iconContainer: {
+      width: '100px',
+      height: '100px',
+      backgroundColor: '#dcfce7',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      margin: '0 auto 2rem',
+      border: '3px solid #bbf7d0'
+    },
+    icon: {
+      fontSize: '3rem',
+      color: '#16a34a'
     },
     title: {
       fontSize: '2rem',
-      color: '#1e293b',
-      marginBottom: '0.5rem',
+      color: '#166534',
+      marginBottom: '1rem',
+      fontWeight: 700
     },
-    subtitle: {
-      color: '#64748b',
+    message: {
       fontSize: '1.1rem',
+      color: '#4b5563',
+      lineHeight: 1.6,
+      marginBottom: '2rem'
     },
-    content: {
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '2rem',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+    progressBar: {
+      width: '100%',
+      height: '8px',
+      backgroundColor: '#e5e7eb',
+      borderRadius: '4px',
+      overflow: 'hidden',
+      margin: '2rem auto'
     },
-    section: {
-      marginBottom: '2rem',
+    progressFill: {
+      width: '65%',
+      height: '100%',
+      backgroundColor: '#22c55e',
+      borderRadius: '4px',
+      animation: 'pulse 2s ease-in-out infinite'
     },
-    sectionTitle: {
-      fontSize: '1.5rem',
-      color: '#334155',
-      marginBottom: '1rem',
+    status: {
+      display: 'inline-block',
+      backgroundColor: '#dcfce7',
+      color: '#166534',
+      padding: '0.5rem 1.5rem',
+      borderRadius: '999px',
+      fontSize: '0.9rem',
+      fontWeight: 600,
+      marginTop: '1rem',
+      border: '1px solid #bbf7d0'
     },
-    card: {
-      backgroundColor: '#f8fafc',
-      padding: '1.5rem',
-      borderRadius: '8px',
-      marginBottom: '1rem',
-      border: '1px solid #e2e8f0',
+    comingSoon: {
+      marginTop: '2rem',
+      color: '#6b7280',
+      fontSize: '0.95rem',
+      fontStyle: 'italic'
     },
+    // Animation keyframes
+    keyframes: {
+      '@keyframes pulse': {
+        '0%, 100%': {
+          opacity: 1
+        },
+        '50%': {
+          opacity: 0.7
+        }
+      }
+    }
   };
 
   return (
     <div style={styles.page}>
-      <div style={styles.header}>
+      <style>
+        {`
+          @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+          }
+        `}
+      </style>
+      <div style={styles.container}>
+        <div style={styles.iconContainer}>
+          <svg 
+            style={styles.icon}
+            fill="currentColor" 
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </div>
+        
         <h1 style={styles.title}>NQF 5 Program</h1>
-        <p style={styles.subtitle}>National Qualifications Framework Level 5 Courses</p>
-      </div>
-
-      <div style={styles.content}>
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Course Overview</h2>
-          <div style={styles.card}>
-            <h3>Biblical Studies</h3>
-            <p>Comprehensive study of Old and New Testament scriptures with practical application.</p>
-          </div>
-          <div style={styles.card}>
-            <h3>Theology and Doctrine</h3>
-            <p>Systematic study of Christian beliefs and theological principles.</p>
-          </div>
-          <div style={styles.card}>
-            <h3>Ministry Leadership</h3>
-            <p>Developing leadership skills for effective ministry and church management.</p>
-          </div>
+        
+        <p style={styles.message}>
+          We're currently developing an amazing learning experience for the National Qualifications Framework Level 5.
+          This section will include comprehensive courses, interactive materials, and assessment tools.
+        </p>
+        
+        <div style={styles.progressBar}>
+          <div style={styles.progressFill}></div>
         </div>
-
-        <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Program Requirements</h2>
-          <div style={styles.card}>
-            <p><strong>Duration:</strong> 2 years full-time</p>
-            <p><strong>Credits:</strong> 120 credits minimum</p>
-            <p><strong>Assessment:</strong> Assignments, exams, and practical ministry</p>
-          </div>
-        </div>
+        
+        <div style={styles.status}>In Development</div>
+        
+        <p style={styles.comingSoon}>
+          Stay tuned for our launch announcement!
+        </p>
       </div>
     </div>
   );

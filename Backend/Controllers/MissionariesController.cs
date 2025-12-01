@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Backend.Controllers
 {
@@ -46,7 +47,7 @@ namespace Backend.Controllers
             if (!string.IsNullOrEmpty(locationCountry))
                 query = query.Where(m => m.LocationCountry == locationCountry);
 
-            query = query.OrderBy(m => m.User.FirstName);
+            query = query.OrderBy(m => m.User!.FirstName);
 
             var total = await query.CountAsync();
             var missionaries = await query
@@ -170,18 +171,21 @@ namespace Backend.Controllers
             if (missionary == null)
                 return NotFound();
 
-            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             // Only owner or admin can update
             if (userId != currentUserId && userRole != "admin" && userRole != "secretary")
                 return Forbid();
 
-            // Update user info
-            missionary.User.FirstName = dto.FirstName ?? missionary.User.FirstName;
-            missionary.User.LastName = dto.LastName ?? missionary.User.LastName;
-            missionary.User.ContactPhone = dto.ContactPhone ?? missionary.User.ContactPhone;
-            missionary.User.ProfilePhoto = dto.ProfilePhoto ?? missionary.User.ProfilePhoto;
+            // Update user info if user exists
+            if (missionary.User != null)
+            {
+                missionary.User.FirstName = dto.FirstName ?? missionary.User.FirstName;
+                missionary.User.LastName = dto.LastName ?? missionary.User.LastName;
+                missionary.User.ContactPhone = dto.ContactPhone ?? missionary.User.ContactPhone;
+                missionary.User.ProfilePhoto = dto.ProfilePhoto ?? missionary.User.ProfilePhoto;
+            }
 
             // Update missionary profile
             missionary.Photo = dto.ProfilePhoto ?? missionary.Photo;
@@ -223,8 +227,16 @@ namespace Backend.Controllers
 
             var user = missionary.User;
 
-            _context.Missionaries.Remove(missionary);
-            await _userManager.DeleteAsync(user);
+            if (user != null)
+            {
+                _context.Missionaries.Remove(missionary);
+                await _userManager.DeleteAsync(user);
+            }
+            else
+            {
+                _context.Missionaries.Remove(missionary);
+                await _context.SaveChangesAsync();
+            }
 
             return NoContent();
         }
@@ -238,7 +250,7 @@ namespace Backend.Controllers
         {
             var query = _context.PrayerRequests
                 .Include(pr => pr.Missionary)
-                .ThenInclude(m => m.User)
+                .ThenInclude(m => m!.User)
                 .Include(pr => pr.PostedBy)
                 .Where(pr => pr.MissionaryId == userId)
                 .OrderByDescending(pr => pr.CreatedAt);
@@ -272,16 +284,21 @@ namespace Backend.Controllers
             if (missionary == null)
                 return NotFound(new { message = "Missionary not found" });
 
-            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized();
 
             var prayerRequest = new PrayerRequest
             {
                 MissionaryId = userId,
                 Text = dto.Text,
                 Urgency = dto.Urgency,
-                Images = JsonSerializer.Serialize(dto.Images),
-                PostedById = currentUserId!,
-                PrayerCount = 0
+                Images = JsonSerializer.Serialize(dto.Images ?? new List<string>()),
+                PostedById = currentUserId,
+                PrayerCount = 0,
+                CreatedAt = DateTime.UtcNow,
+                Status = "active"
             };
 
             _context.PrayerRequests.Add(prayerRequest);
@@ -290,7 +307,7 @@ namespace Backend.Controllers
             // Reload with relationships
             prayerRequest = await _context.PrayerRequests
                 .Include(pr => pr.Missionary)
-                .ThenInclude(m => m.User)
+                .ThenInclude(m => m!.User)
                 .Include(pr => pr.PostedBy)
                 .FirstAsync(pr => pr.Id == prayerRequest.Id);
 
@@ -321,7 +338,10 @@ namespace Backend.Controllers
             if (missionary == null)
                 return NotFound();
 
-            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized();
 
             // Check if already following
             var existingFollow = await _context.Likes
@@ -336,9 +356,9 @@ namespace Backend.Controllers
             // Create follow
             var follow = new Like
             {
-                UserId = currentUserId!,
+                UserId = currentUserId,
                 ParentType = "missionary",
-                ParentId = userId.GetHashCode()
+                ParentId = Math.Abs(userId.GetHashCode())
             };
 
             _context.Likes.Add(follow);
@@ -351,7 +371,10 @@ namespace Backend.Controllers
         [HttpDelete("{userId}/follow")]
         public async Task<IActionResult> UnfollowMissionary(string userId)
         {
-            var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(currentUserId))
+                return Unauthorized();
 
             var follow = await _context.Likes
                 .FirstOrDefaultAsync(l => 
@@ -370,9 +393,11 @@ namespace Backend.Controllers
 
         private MissionaryDto MapToMissionaryDto(Missionary missionary)
         {
-            return new MissionaryDto
+            if (missionary == null)
+                return null!;
+
+            var dto = new MissionaryDto
             {
-                User = MapToUserDto(missionary.User),
                 Photo = missionary.Photo,
                 LocationCountry = missionary.LocationCountry,
                 OriginalCountry = missionary.OriginalCountry,
@@ -381,31 +406,59 @@ namespace Backend.Controllers
                 MinistryDescription = missionary.MinistryDescription,
                 ContactPreference = missionary.ContactPreference,
                 ActiveStatus = missionary.ActiveStatus,
-                LatestUpdate = missionary.LatestUpdate == null ? null : MapToPostDto(missionary.LatestUpdate)
+                LatestUpdate = null
             };
+
+            if (missionary.User != null)
+            {
+                dto.User = MapToUserDto(missionary.User);
+            }
+
+            if (missionary.LatestUpdate != null)
+            {
+                dto.LatestUpdate = MapToPostDto(missionary.LatestUpdate);
+            }
+
+            return dto;
         }
 
         private PrayerRequestDto MapToPrayerRequestDto(PrayerRequest pr)
         {
-            return new PrayerRequestDto
+            if (pr == null)
+                return null!;
+
+            var dto = new PrayerRequestDto
             {
                 Id = pr.Id,
-                Missionary = MapToMissionaryDto(pr.Missionary),
                 Text = pr.Text,
                 Urgency = pr.Urgency,
                 Images = JsonSerializer.Deserialize<List<string>>(pr.Images) ?? new List<string>(),
-                PostedBy = MapToUserDto(pr.PostedBy),
                 CreatedAt = pr.CreatedAt,
-                PrayerCount = pr.PrayerCount
+                PrayerCount = pr.PrayerCount,
+                Status = pr.Status
             };
+
+            if (pr.Missionary != null)
+            {
+                dto.Missionary = MapToMissionaryDto(pr.Missionary);
+            }
+
+            if (pr.PostedBy != null)
+            {
+                dto.PostedBy = MapToUserDto(pr.PostedBy);
+            }
+
+            return dto;
         }
 
         private PostDto MapToPostDto(Post post)
         {
-            return new PostDto
+            if (post == null)
+                return null!;
+
+            var dto = new PostDto
             {
                 Id = post.Id,
-                Author = MapToUserDto(post.Author),
                 Title = post.Title,
                 Body = post.Body,
                 PostType = post.PostType,
@@ -415,12 +468,24 @@ namespace Backend.Controllers
                 Pinned = post.Pinned,
                 Tags = JsonSerializer.Deserialize<List<string>>(post.Tags) ?? new List<string>(),
                 CreatedAt = post.CreatedAt,
-                ScheduledAt = post.ScheduledAt
+                ScheduledAt = post.ScheduledAt,
+                LikeCount = 0,
+                CommentCount = 0
             };
+
+            if (post.Author != null)
+            {
+                dto.Author = MapToUserDto(post.Author);
+            }
+
+            return dto;
         }
 
         private static UserDto MapToUserDto(User user)
         {
+            if (user == null)
+                return null!;
+
             return new UserDto
             {
                 Id = user.Id,

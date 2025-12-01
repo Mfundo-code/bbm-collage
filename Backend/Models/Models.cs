@@ -34,6 +34,8 @@ namespace Backend.Models
         public virtual Student? Student { get; set; }
         public virtual Alumni? Alumni { get; set; }
         public virtual Missionary? Missionary { get; set; }
+        public virtual Mentor? Mentor { get; set; }
+        public virtual Mentee? Mentee { get; set; }
         public virtual ICollection<Post> Posts { get; set; } = new List<Post>();
         public virtual ICollection<Testimony> Testimonies { get; set; } = new List<Testimony>();
         public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
@@ -176,6 +178,120 @@ namespace Backend.Models
 
         // Navigation properties
         public virtual ICollection<PrayerRequest> PrayerRequests { get; set; } = new List<PrayerRequest>();
+    }
+
+    public class Mentor
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public string UserId { get; set; } = null!;
+
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string AreaOfExpertise { get; set; } = null!;
+
+        [MaxLength(500)]
+        public string? Bio { get; set; }
+
+        [Column(TypeName = "jsonb")]
+        public string Availability { get; set; } = "{}";
+
+        [Column(TypeName = "jsonb")]
+        public string CommunicationChannels { get; set; } = "[]";
+
+        public int MaxMentees { get; set; } = 5;
+
+        public int CurrentMentees { get; set; } = 0;
+
+        [Required]
+        [MaxLength(20)]
+        public string Status { get; set; } = "active";
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime? UpdatedAt { get; set; }
+
+        // Navigation properties
+        public virtual ICollection<Mentee> Mentees { get; set; } = new List<Mentee>();
+        public virtual ICollection<MentorshipSession> Sessions { get; set; } = new List<MentorshipSession>();
+    }
+
+    public class Mentee
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public string UserId { get; set; } = null!;
+
+        [ForeignKey("UserId")]
+        public virtual User User { get; set; } = null!;
+
+        public int? MentorId { get; set; }
+
+        [ForeignKey("MentorId")]
+        public virtual Mentor? Mentor { get; set; }
+
+        [Required]
+        [MaxLength(100)]
+        public string LearningGoals { get; set; } = null!;
+
+        [MaxLength(500)]
+        public string? Background { get; set; }
+
+        [Column(TypeName = "jsonb")]
+        public string PreferredTopics { get; set; } = "[]";
+
+        [Required]
+        [MaxLength(20)]
+        public string Status { get; set; } = "active";
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    public class MentorshipSession
+    {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public int MentorId { get; set; }
+
+        [ForeignKey("MentorId")]
+        public virtual Mentor Mentor { get; set; } = null!;
+
+        [Required]
+        public int MenteeId { get; set; }
+
+        [ForeignKey("MenteeId")]
+        public virtual Mentee Mentee { get; set; } = null!;
+
+        [Required]
+        public DateTime ScheduledAt { get; set; }
+
+        public int DurationMinutes { get; set; } = 60;
+
+        [MaxLength(100)]
+        public string? MeetingLink { get; set; }
+
+        [MaxLength(200)]
+        public string? Title { get; set; }
+
+        [MaxLength(500)]
+        public string? Agenda { get; set; }
+
+        [MaxLength(20)]
+        public string Status { get; set; } = "scheduled";
+
+        [MaxLength(500)]
+        public string? Notes { get; set; }
+
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
     public class Post
@@ -354,7 +470,6 @@ namespace Backend.Models
         [Key]
         public int Id { get; set; }
 
-        // Make MissionaryId nullable (optional)
         public string? MissionaryId { get; set; }
 
         [ForeignKey("MissionaryId")]
@@ -379,9 +494,8 @@ namespace Backend.Models
 
         public int PrayerCount { get; set; } = 0;
 
-        // Optional: Add status field for answered prayers
         [MaxLength(20)]
-        public string Status { get; set; } = "active"; // active, answered
+        public string Status { get; set; } = "active";
 
         public DateTime? AnsweredAt { get; set; }
     }
@@ -601,7 +715,6 @@ namespace Backend.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation property
         public virtual ICollection<OutreachReport> Reports { get; set; } = new List<OutreachReport>();
     }
 

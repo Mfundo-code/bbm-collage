@@ -10,11 +10,13 @@ namespace Backend.Models
         {
         }
 
-        // DbSets
         public DbSet<OneTimeLoginToken> OneTimeLoginTokens { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Alumni> Alumnis { get; set; }
         public DbSet<Missionary> Missionaries { get; set; }
+        public DbSet<Mentor> Mentors { get; set; }
+        public DbSet<Mentee> Mentees { get; set; }
+        public DbSet<MentorshipSession> MentorshipSessions { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<MediaItem> MediaItems { get; set; }
         public DbSet<Testimony> Testimonies { get; set; }
@@ -33,7 +35,6 @@ namespace Backend.Models
         {
             base.OnModelCreating(modelBuilder);
 
-            // User table configuration
             modelBuilder.Entity<User>(entity =>
             {
                 entity.ToTable("Users");
@@ -42,7 +43,6 @@ namespace Backend.Models
                 entity.Property(e => e.PrivacySettings).HasColumnType("TEXT");
             });
 
-            // OneTimeLoginToken configuration
             modelBuilder.Entity<OneTimeLoginToken>(entity =>
             {
                 entity.ToTable("OneTimeLoginTokens");
@@ -50,7 +50,6 @@ namespace Backend.Models
                 entity.HasIndex(e => new { e.Used, e.ExpiresAt });
             });
 
-            // Student configuration
             modelBuilder.Entity<Student>(entity =>
             {
                 entity.ToTable("Students");
@@ -60,7 +59,6 @@ namespace Backend.Models
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Alumni configuration
             modelBuilder.Entity<Alumni>(entity =>
             {
                 entity.ToTable("Alumni");
@@ -70,7 +68,6 @@ namespace Backend.Models
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Missionary configuration
             modelBuilder.Entity<Missionary>(entity =>
             {
                 entity.ToTable("Missionaries");
@@ -80,7 +77,67 @@ namespace Backend.Models
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            // Post configuration
+            modelBuilder.Entity<Mentor>(entity =>
+            {
+                entity.ToTable("Mentors");
+                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
+                
+                entity.HasOne(m => m.User)
+                    .WithOne(u => u.Mentor)
+                    .HasForeignKey<Mentor>(m => m.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.Property(e => e.Availability)
+                    .HasColumnType("jsonb");
+                    
+                entity.Property(e => e.CommunicationChannels)
+                    .HasColumnType("jsonb");
+            });
+
+            modelBuilder.Entity<Mentee>(entity =>
+            {
+                entity.ToTable("Mentees");
+                entity.HasIndex(e => e.UserId).IsUnique();
+                entity.HasIndex(e => e.MentorId);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
+                
+                entity.HasOne(me => me.User)
+                    .WithOne(u => u.Mentee)
+                    .HasForeignKey<Mentee>(me => me.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(me => me.Mentor)
+                    .WithMany(m => m.Mentees)
+                    .HasForeignKey(me => me.MentorId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                    
+                entity.Property(e => e.PreferredTopics)
+                    .HasColumnType("jsonb");
+            });
+
+            modelBuilder.Entity<MentorshipSession>(entity =>
+            {
+                entity.ToTable("MentorshipSessions");
+                entity.HasIndex(e => e.MentorId);
+                entity.HasIndex(e => e.MenteeId);
+                entity.HasIndex(e => e.ScheduledAt);
+                entity.HasIndex(e => e.Status);
+                entity.HasIndex(e => e.CreatedAt);
+                
+                entity.HasOne(ms => ms.Mentor)
+                    .WithMany(m => m.Sessions)
+                    .HasForeignKey(ms => ms.MentorId)
+                    .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(ms => ms.Mentee)
+                    .WithMany()
+                    .HasForeignKey(ms => ms.MenteeId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             modelBuilder.Entity<Post>(entity =>
             {
                 entity.ToTable("Posts");
@@ -89,7 +146,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.CreatedAt);
             });
 
-            // MediaItem configuration
             modelBuilder.Entity<MediaItem>(entity =>
             {
                 entity.ToTable("MediaItems");
@@ -98,7 +154,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.UploadedAt);
             });
 
-            // Testimony configuration
             modelBuilder.Entity<Testimony>(entity =>
             {
                 entity.ToTable("Testimonies");
@@ -106,7 +161,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.CreatedAt);
             });
 
-            // HomileticsEntry configuration
             modelBuilder.Entity<HomileticsEntry>(entity =>
             {
                 entity.ToTable("HomileticsEntries");
@@ -114,7 +168,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.ExpiresAt);
             });
 
-            // Suggestion configuration
             modelBuilder.Entity<Suggestion>(entity =>
             {
                 entity.ToTable("Suggestions");
@@ -123,7 +176,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.CreatedAt);
             });
 
-            // PrayerRequest configuration
             modelBuilder.Entity<PrayerRequest>(entity =>
             {
                 entity.ToTable("PrayerRequests");
@@ -134,7 +186,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.CreatedAt);
             });
 
-            // Comment configuration
             modelBuilder.Entity<Comment>(entity =>
             {
                 entity.ToTable("Comments");
@@ -142,7 +193,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.CreatedAt);
             });
 
-            // Like configuration
             modelBuilder.Entity<Like>(entity =>
             {
                 entity.ToTable("Likes");
@@ -150,7 +200,6 @@ namespace Backend.Models
                 entity.HasIndex(e => new { e.ParentType, e.ParentId });
             });
 
-            // AuditLog configuration
             modelBuilder.Entity<AuditLog>(entity =>
             {
                 entity.ToTable("AuditLogs");
@@ -159,7 +208,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.Timestamp);
             });
 
-            // Donation configuration
             modelBuilder.Entity<Donation>(entity =>
             {
                 entity.ToTable("Donations");
@@ -169,7 +217,6 @@ namespace Backend.Models
                 entity.Property(e => e.Amount).HasColumnType("decimal(18,2)");
             });
 
-            // DonationCampaign configuration
             modelBuilder.Entity<DonationCampaign>(entity =>
             {
                 entity.ToTable("DonationCampaigns");
@@ -179,7 +226,6 @@ namespace Backend.Models
                 entity.Property(e => e.CurrentAmount).HasColumnType("decimal(18,2)");
             });
 
-            // Outreach configuration
             modelBuilder.Entity<Outreach>(entity =>
             {
                 entity.ToTable("Outreaches");
@@ -187,7 +233,6 @@ namespace Backend.Models
                 entity.HasIndex(e => e.CreatedAt);
             });
 
-            // OutreachReport configuration
             modelBuilder.Entity<OutreachReport>(entity =>
             {
                 entity.ToTable("OutreachReports");

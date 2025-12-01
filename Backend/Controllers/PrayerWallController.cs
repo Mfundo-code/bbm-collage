@@ -8,6 +8,7 @@ using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Backend.Controllers
 {
@@ -35,11 +36,11 @@ namespace Backend.Controllers
         {
             var query = _context.PrayerRequests
                 .Include(pr => pr.Missionary)
-                    .ThenInclude(m => m.User)
+                    .ThenInclude(m => m!.User)
                 .Include(pr => pr.PostedBy)
                 .AsQueryable();
 
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             // Apply filters
             if (!string.IsNullOrEmpty(urgency))
@@ -83,7 +84,7 @@ namespace Backend.Controllers
         {
             var prayerRequest = await _context.PrayerRequests
                 .Include(pr => pr.Missionary)
-                    .ThenInclude(m => m.User)
+                    .ThenInclude(m => m!.User)
                 .Include(pr => pr.PostedBy)
                 .FirstOrDefaultAsync(pr => pr.Id == id);
 
@@ -100,7 +101,7 @@ namespace Backend.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
@@ -133,7 +134,7 @@ namespace Backend.Controllers
             // Reload with relationships
             prayerRequest = await _context.PrayerRequests
                 .Include(pr => pr.Missionary)
-                    .ThenInclude(m => m.User)
+                    .ThenInclude(m => m!.User)
                 .Include(pr => pr.PostedBy)
                 .FirstAsync(pr => pr.Id == prayerRequest.Id);
 
@@ -171,8 +172,8 @@ namespace Backend.Controllers
             if (prayerRequest == null)
                 return NotFound();
 
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             // Only owner or admin can update
             if (prayerRequest.PostedById != userId && userRole != "admin")
@@ -197,7 +198,7 @@ namespace Backend.Controllers
             // Reload with relationships
             prayerRequest = await _context.PrayerRequests
                 .Include(pr => pr.Missionary)
-                    .ThenInclude(m => m.User)
+                    .ThenInclude(m => m!.User)
                 .Include(pr => pr.PostedBy)
                 .FirstAsync(pr => pr.Id == prayerRequest.Id);
 
@@ -212,8 +213,8 @@ namespace Backend.Controllers
             if (prayerRequest == null)
                 return NotFound();
 
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             // Only owner or admin can mark as answered
             if (prayerRequest.PostedById != userId && userRole != "admin")
@@ -235,8 +236,8 @@ namespace Backend.Controllers
             if (prayerRequest == null)
                 return NotFound();
 
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var userRole = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
             // Only owner or admin can delete
             if (prayerRequest.PostedById != userId && userRole != "admin")
@@ -261,14 +262,21 @@ namespace Backend.Controllers
             var recentRequests = await _context.PrayerRequests
                 .CountAsync(pr => pr.CreatedAt >= DateTime.UtcNow.AddDays(-7));
 
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var userPrayers = await _context.PrayerRequests
-                .Where(pr => pr.PostedById == userId)
-                .CountAsync();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
-            var userAnsweredPrayers = await _context.PrayerRequests
-                .Where(pr => pr.PostedById == userId && pr.Status == "answered")
-                .CountAsync();
+            var userPrayers = 0;
+            var userAnsweredPrayers = 0;
+            
+            if (!string.IsNullOrEmpty(userId))
+            {
+                userPrayers = await _context.PrayerRequests
+                    .Where(pr => pr.PostedById == userId)
+                    .CountAsync();
+                
+                userAnsweredPrayers = await _context.PrayerRequests
+                    .Where(pr => pr.PostedById == userId && pr.Status == "answered")
+                    .CountAsync();
+            }
 
             return Ok(new
             {
@@ -289,14 +297,14 @@ namespace Backend.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized();
 
             var query = _context.PrayerRequests
                 .Include(pr => pr.Missionary)
-                    .ThenInclude(m => m.User)
+                    .ThenInclude(m => m!.User)
                 .Include(pr => pr.PostedBy)
                 .Where(pr => pr.PostedById == userId);
 
@@ -325,10 +333,22 @@ namespace Backend.Controllers
 
         private PrayerWallDto MapToPrayerWallDto(PrayerRequest pr)
         {
-            return new PrayerWallDto
+            var dto = new PrayerWallDto
             {
                 Id = pr.Id,
-                Missionary = pr.Missionary == null ? null : new MissionaryDto
+                Text = pr.Text,
+                Urgency = pr.Urgency,
+                Status = pr.Status,
+                Images = JsonSerializer.Deserialize<List<string>>(pr.Images) ?? new List<string>(),
+                CreatedAt = pr.CreatedAt,
+                PrayerCount = pr.PrayerCount,
+                AnsweredAt = pr.AnsweredAt
+            };
+
+            // Set Missionary if available
+            if (pr.Missionary != null && pr.Missionary.User != null)
+            {
+                dto.Missionary = new MissionaryDto
                 {
                     User = new UserDto
                     {
@@ -350,12 +370,13 @@ namespace Backend.Controllers
                     ContactPreference = pr.Missionary.ContactPreference,
                     ActiveStatus = pr.Missionary.ActiveStatus,
                     LatestUpdate = null
-                },
-                Text = pr.Text,
-                Urgency = pr.Urgency,
-                Status = pr.Status,
-                Images = JsonSerializer.Deserialize<List<string>>(pr.Images) ?? new List<string>(),
-                PostedBy = new UserDto
+                };
+            }
+
+            // Set PostedBy if available
+            if (pr.PostedBy != null)
+            {
+                dto.PostedBy = new UserDto
                 {
                     Id = pr.PostedBy.Id,
                     Email = pr.PostedBy.Email!,
@@ -365,10 +386,10 @@ namespace Backend.Controllers
                     ProfilePhoto = pr.PostedBy.ProfilePhoto,
                     ContactPhone = pr.PostedBy.ContactPhone,
                     CreatedAt = pr.PostedBy.CreatedAt
-                },
-                CreatedAt = pr.CreatedAt,
-                PrayerCount = pr.PrayerCount
-            };
+                };
+            }
+
+            return dto;
         }
     }
 }

@@ -189,7 +189,6 @@ export const donationsAPI = {
     api.post('/donations/campaigns', data),
 };
 
-// Add this to your existing exports in api.js
 export const outreachesAPI = {
   getOutreaches: (params = {}) => 
     api.get('/outreaches', { params }),
@@ -216,10 +215,7 @@ export const outreachesAPI = {
     api.delete(`/outreaches/reports/${reportId}`),
 };
 
-
-// Update the prayerWallAPI section
 export const prayerWallAPI = {
-  // Prayer Requests
   getRequests: (params = {}) => 
     api.get('/prayerwall', { params }),
   
@@ -235,22 +231,58 @@ export const prayerWallAPI = {
   deleteRequest: (id) => 
     api.delete(`/prayerwall/${id}`),
   
-  // Pray
   prayForRequest: (id) => 
     api.post(`/prayerwall/${id}/pray`),
   
-  // Mark as answered
   markAsAnswered: (id) => 
     api.patch(`/prayerwall/${id}/mark-answered`),
   
-  // Stats
   getStats: () => 
     api.get('/prayerwall/stats'),
   
-  // User requests
   getMyRequests: (params = {}) => 
     api.get('/prayerwall/my-requests', { params }),
 };
+
+
+export const mentorshipAPI = {
+  getMentors: (params = {}) => 
+    api.get('/mentors', { params }),
+  
+  getMentor: (id) => 
+    api.get(`/mentors/${id}`),
+  
+  createMentor: (data) => 
+    api.post('/mentors', data),
+  
+  updateMentor: (id, data) => 
+    api.put(`/mentors/${id}`, data),
+  
+  deleteMentor: (id) => 
+    api.delete(`/mentors/${id}`),
+  
+  getMentees: (params = {}) => 
+    api.get('/mentees', { params }),
+  
+  createMentee: (data) => 
+    api.post('/mentees', data),
+  
+  updateMentee: (id, data) => 
+    api.put(`/mentees/${id}`, data),
+  
+  deleteMentee: (id) => 
+    api.delete(`/mentees/${id}`),
+  
+  assignMentee: (mentorId, menteeId) => 
+    api.post(`/mentors/${mentorId}/mentees/${menteeId}`),
+  
+  removeMentee: (mentorId, menteeId) => 
+    api.delete(`/mentors/${mentorId}/mentees/${menteeId}`),
+  
+  getAvailableUsers: () => 
+    api.get('/mentors/available-users'),
+};
+
 
 
 export const uploadAPI = {

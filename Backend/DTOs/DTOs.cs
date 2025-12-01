@@ -1,11 +1,9 @@
-// Backend/DTOs/DTOs.cs
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Backend.DTOs
 {
-    // Authentication DTOs
     public class LoginRequestDto
     {
         [Required]
@@ -28,7 +26,6 @@ namespace Backend.DTOs
         public string Token { get; set; } = null!;
     }
 
-    // User DTOs
     public class UserDto
     {
         public string Id { get; set; } = null!;
@@ -66,7 +63,6 @@ namespace Backend.DTOs
         public string? ProfilePhoto { get; set; }
     }
 
-    // Post DTOs
     public class PostDto
     {
         public int Id { get; set; }
@@ -99,7 +95,6 @@ namespace Backend.DTOs
         public DateTime? ScheduledAt { get; set; }
     }
 
-    // Testimony DTOs
     public class TestimonyDto
     {
         public int Id { get; set; }
@@ -133,7 +128,6 @@ namespace Backend.DTOs
         public string? OutreachTag { get; set; }
     }
 
-    // Suggestion DTOs
     public class SuggestionDto
     {
         public int Id { get; set; }
@@ -169,10 +163,9 @@ namespace Backend.DTOs
     {
         [Required]
         [MaxLength(20)]
-        public string Status { get; set; } = null!; // pending, reviewed, approved, rejected
+        public string Status { get; set; } = null!;
     }
 
-    // Missionary DTOs
     public class MissionaryDto
     {
         public UserDto User { get; set; } = null!;
@@ -246,11 +239,10 @@ namespace Backend.DTOs
         public string? ActiveStatus { get; set; }
     }
 
-    // Prayer Request DTOs
     public class PrayerRequestDto
     {
         public int Id { get; set; }
-        public MissionaryDto? Missionary { get; set; } // Now optional
+        public MissionaryDto? Missionary { get; set; }
         public string Text { get; set; } = null!;
         public string Urgency { get; set; } = null!;
         public List<string> Images { get; set; } = new();
@@ -271,14 +263,13 @@ namespace Backend.DTOs
 
         public List<string> Images { get; set; } = new();
         
-        public string? MissionaryId { get; set; } // Optional
+        public string? MissionaryId { get; set; }
     }
 
-    // Prayer Wall DTOs
     public class PrayerWallDto
     {
         public int Id { get; set; }
-        public MissionaryDto? Missionary { get; set; } // Now optional
+        public MissionaryDto? Missionary { get; set; }
         public string Text { get; set; } = null!;
         public string Urgency { get; set; } = null!;
         public string? Status { get; set; } = "active";
@@ -298,7 +289,7 @@ namespace Backend.DTOs
         [MaxLength(20)]
         public string? Urgency { get; set; } = "medium";
         
-        public string? MissionaryId { get; set; } // Optional - for missionary-specific prayers
+        public string? MissionaryId { get; set; }
         
         public List<string> Images { get; set; } = new();
     }
@@ -308,10 +299,9 @@ namespace Backend.DTOs
         public string? Text { get; set; }
         public string? Urgency { get; set; }
         public List<string>? Images { get; set; }
-        public string? Status { get; set; } // For marking as answered
+        public string? Status { get; set; }
     }
 
-    // Alumni DTOs
     public class AlumniDto
     {
         public UserDto User { get; set; } = null!;
@@ -367,7 +357,6 @@ namespace Backend.DTOs
         public Dictionary<string, string> LinkedProfiles { get; set; } = new();
     }
 
-    // Homiletics DTOs
     public class HomileticsEntryDto
     {
         public int Id { get; set; }
@@ -404,7 +393,6 @@ namespace Backend.DTOs
         public DateTime ExpiresAt { get; set; }
     }
 
-    // Donation DTOs
     public class DonationDto
     {
         public int Id { get; set; }
@@ -462,7 +450,7 @@ namespace Backend.DTOs
     public class UpdateDonationStatusDto
     {
         [Required]
-        public string Status { get; set; } = null!; // pending, completed, failed, refunded
+        public string Status { get; set; } = null!;
         public string? Notes { get; set; }
     }
 
@@ -504,7 +492,6 @@ namespace Backend.DTOs
         public DateTime? EndDate { get; set; }
     }
 
-    // Outreach DTOs
     public class OutreachDto
     {
         public int Id { get; set; }
@@ -568,7 +555,6 @@ namespace Backend.DTOs
         public List<string> Photos { get; set; } = new();
     }
 
-    // Interaction DTOs
     public class LikeDto
     {
         public int Id { get; set; }
@@ -613,7 +599,6 @@ namespace Backend.DTOs
         public List<string> Attachments { get; set; } = new();
     }
 
-    // Update/Mission Updates DTOs
     public class UpdateCreateDto
     {
         public string? Title { get; set; }
@@ -624,7 +609,6 @@ namespace Backend.DTOs
         public List<string> Tags { get; set; } = new();
     }
 
-    // Sunday Service DTOs
     public class SundayServiceCreateDto
     {
         public string? Title { get; set; }
@@ -635,7 +619,6 @@ namespace Backend.DTOs
         public List<string> Tags { get; set; } = new();
     }
 
-    // Announcement DTOs
     public class AnnouncementCreateDto
     {
         public string? Title { get; set; }
@@ -648,7 +631,6 @@ namespace Backend.DTOs
         public DateTime? ScheduledAt { get; set; }
     }
 
-    // Media Item DTOs
     public class MediaItemDto
     {
         public int Id { get; set; }
@@ -663,7 +645,6 @@ namespace Backend.DTOs
         public string Status { get; set; } = null!;
     }
 
-    // Student DTOs
     public class StudentDto
     {
         public string UserId { get; set; } = null!;
@@ -676,7 +657,6 @@ namespace Backend.DTOs
         public string? Notes { get; set; }
     }
 
-    // Setup DTOs
     public class CreateAdminDto
     {
         public string? Email { get; set; }
@@ -685,7 +665,6 @@ namespace Backend.DTOs
         public string? LastName { get; set; }
     }
 
-    // Audit Log DTOs
     public class AuditLogDto
     {
         public int Id { get; set; }
@@ -695,5 +674,165 @@ namespace Backend.DTOs
         public int TargetId { get; set; }
         public Dictionary<string, object> Diff { get; set; } = new();
         public DateTime Timestamp { get; set; }
+    }
+
+    // Mentorship DTOs
+    public class MentorDto
+    {
+        public int Id { get; set; }
+        public UserDto User { get; set; } = null!;
+        public string AreaOfExpertise { get; set; } = null!;
+        public string? Bio { get; set; }
+        public object Availability { get; set; } = null!;
+        public List<string> CommunicationChannels { get; set; } = new();
+        public int MaxMentees { get; set; }
+        public int CurrentMentees { get; set; }
+        public string Status { get; set; } = null!;
+        public DateTime CreatedAt { get; set; }
+        public List<MenteeDto> Mentees { get; set; } = new();
+    }
+
+    public class CreateMentorDto
+    {
+        [Required]
+        public string UserId { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string AreaOfExpertise { get; set; } = null!;
+
+        [MaxLength(500)]
+        public string? Bio { get; set; }
+
+        public object? Availability { get; set; }
+
+        public List<string>? CommunicationChannels { get; set; }
+
+        [Range(1, 50)]
+        public int MaxMentees { get; set; } = 5;
+    }
+
+    public class UpdateMentorDto
+    {
+        [MaxLength(100)]
+        public string? AreaOfExpertise { get; set; }
+
+        [MaxLength(500)]
+        public string? Bio { get; set; }
+
+        public object? Availability { get; set; }
+
+        public List<string>? CommunicationChannels { get; set; }
+
+        [Range(1, 50)]
+        public int? MaxMentees { get; set; }
+
+        [MaxLength(20)]
+        public string? Status { get; set; }
+    }
+
+    public class MenteeDto
+    {
+        public int Id { get; set; }
+        public UserDto User { get; set; } = null!;
+        public MentorDto? Mentor { get; set; }
+        public string LearningGoals { get; set; } = null!;
+        public string? Background { get; set; }
+        public List<string> PreferredTopics { get; set; } = new();
+        public string Status { get; set; } = null!;
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class CreateMenteeDto
+    {
+        [Required]
+        public string UserId { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string LearningGoals { get; set; } = null!;
+
+        [MaxLength(500)]
+        public string? Background { get; set; }
+
+        public List<string>? PreferredTopics { get; set; }
+    }
+
+    public class UpdateMenteeDto
+    {
+        [MaxLength(100)]
+        public string? LearningGoals { get; set; }
+
+        [MaxLength(500)]
+        public string? Background { get; set; }
+
+        public List<string>? PreferredTopics { get; set; }
+
+        [MaxLength(20)]
+        public string? Status { get; set; }
+
+        public int? MentorId { get; set; }
+    }
+
+    public class MentorshipSessionDto
+    {
+        public int Id { get; set; }
+        public MentorDto Mentor { get; set; } = null!;
+        public MenteeDto Mentee { get; set; } = null!;
+        public DateTime ScheduledAt { get; set; }
+        public int DurationMinutes { get; set; }
+        public string? MeetingLink { get; set; }
+        public string? Title { get; set; }
+        public string? Agenda { get; set; }
+        public string Status { get; set; } = null!;
+        public string? Notes { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class CreateMentorshipSessionDto
+    {
+        [Required]
+        public int MentorId { get; set; }
+
+        [Required]
+        public int MenteeId { get; set; }
+
+        [Required]
+        public DateTime ScheduledAt { get; set; }
+
+        [Range(15, 480)]
+        public int DurationMinutes { get; set; } = 60;
+
+        [MaxLength(100)]
+        public string? MeetingLink { get; set; }
+
+        [MaxLength(200)]
+        public string? Title { get; set; }
+
+        [MaxLength(500)]
+        public string? Agenda { get; set; }
+    }
+
+    public class UpdateMentorshipSessionDto
+    {
+        public DateTime? ScheduledAt { get; set; }
+
+        [Range(15, 480)]
+        public int? DurationMinutes { get; set; }
+
+        [MaxLength(100)]
+        public string? MeetingLink { get; set; }
+
+        [MaxLength(200)]
+        public string? Title { get; set; }
+
+        [MaxLength(500)]
+        public string? Agenda { get; set; }
+
+        [MaxLength(20)]
+        public string? Status { get; set; }
+
+        [MaxLength(500)]
+        public string? Notes { get; set; }
     }
 }
