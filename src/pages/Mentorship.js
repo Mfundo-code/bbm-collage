@@ -1,4 +1,3 @@
-// src/pages/Mentorship.js
 import React, { useState, useEffect } from 'react';
 import { mentorshipAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +9,7 @@ const Mentorship = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   
   // Modal states
   const [showAddMentorModal, setShowAddMentorModal] = useState(false);
@@ -44,8 +44,14 @@ const Mentorship = () => {
   });
 
   useEffect(() => {
+    const checkIfMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
     fetchMentors();
     fetchMentees();
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
   const fetchMentors = async () => {
@@ -180,71 +186,71 @@ const Mentorship = () => {
 
   const isAdmin = user?.role === 'admin' || user?.role === 'secretary';
 
-  // Simplified styles without red and without capacity stats
+  // Responsive styles
   const styles = {
     page: { 
       maxWidth: '1200px', 
-      margin: '2rem auto', 
-      width: '95%', 
+      margin: isMobile ? '1rem auto' : '2rem auto', 
+      width: isMobile ? '92%' : '95%', 
       fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' 
     },
     header: { 
-      marginBottom: '1.5rem', 
+      marginBottom: isMobile ? '1rem' : '1.5rem', 
       display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
       justifyContent: 'space-between', 
-      alignItems: 'center' 
+      alignItems: isMobile ? 'flex-start' : 'center',
+      gap: isMobile ? '1rem' : '0'
     },
     headerLeft: { 
       flex: 1 
     },
     title: { 
-      fontSize: '1.9rem', 
+      fontSize: isMobile ? '1.5rem' : '1.9rem', 
       color: '#0f172a', 
       margin: 0 
     },
     subtitle: { 
       color: '#64748b', 
-      fontSize: '0.95rem', 
+      fontSize: isMobile ? '0.85rem' : '0.95rem', 
       marginTop: '0.25rem' 
     },
     controls: {
       display: 'flex',
-      gap: '0.75rem',
-      flexWrap: 'wrap'
+      gap: isMobile ? '0.5rem' : '0.75rem',
+      flexWrap: 'wrap',
+      width: isMobile ? '100%' : 'auto'
     },
     primaryBtn: { 
       backgroundColor: '#0ea5e9', 
       color: 'white', 
       border: 'none', 
-      padding: '0.6rem 1.1rem', 
+      padding: isMobile ? '0.5rem 0.85rem' : '0.6rem 1.1rem', 
       borderRadius: '10px', 
       fontWeight: 600, 
       cursor: 'pointer', 
-      fontSize: '0.95rem',
+      fontSize: isMobile ? '0.85rem' : '0.95rem',
       transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#0284c7'
-      }
+      flex: isMobile ? 1 : 'none'
     },
     secondaryBtn: {
       backgroundColor: '#64748b', 
       color: 'white', 
       border: 'none', 
-      padding: '0.6rem 1.1rem', 
+      padding: isMobile ? '0.5rem 0.85rem' : '0.6rem 1.1rem', 
       borderRadius: '10px', 
       fontWeight: 600, 
       cursor: 'pointer', 
-      fontSize: '0.95rem',
+      fontSize: isMobile ? '0.85rem' : '0.95rem',
       transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#475569'
-      }
+      flex: isMobile ? 1 : 'none'
     },
     alert: { 
-      padding: '0.85rem', 
+      padding: isMobile ? '0.75rem' : '0.85rem', 
       borderRadius: '10px', 
-      marginBottom: '1rem', 
-      border: '1px solid' 
+      marginBottom: isMobile ? '0.75rem' : '1rem', 
+      border: '1px solid',
+      fontSize: isMobile ? '0.85rem' : '1rem'
     },
     alertError: { 
       backgroundColor: '#fff1f2', 
@@ -258,87 +264,95 @@ const Mentorship = () => {
     },
     loading: { 
       textAlign: 'center', 
-      padding: '4rem 2rem', 
-      color: '#64748b' 
+      padding: isMobile ? '3rem 1rem' : '4rem 2rem', 
+      color: '#64748b',
+      fontSize: isMobile ? '0.95rem' : '1rem'
     },
     empty: { 
       textAlign: 'center', 
-      padding: '4rem 2rem', 
+      padding: isMobile ? '3rem 1rem' : '4rem 2rem', 
       color: '#64748b', 
       backgroundColor: 'white', 
       borderRadius: '12px',
-      border: '1px solid #e5e7eb'
+      border: '1px solid #e5e7eb',
+      fontSize: isMobile ? '0.95rem' : '1rem'
     },
 
     // Vertical list layout
     grid: { 
       display: 'flex', 
       flexDirection: 'column', 
-      gap: '1.25rem' 
+      gap: isMobile ? '1rem' : '1.25rem' 
     },
 
     mentorCard: { 
       width: '100%', 
       backgroundColor: 'white',
       borderRadius: '8px', 
-      padding: '1.25rem', 
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)', 
+      padding: isMobile ? '1rem' : '1.25rem', 
+      boxShadow: isMobile ? '0 1px 4px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.1)', 
       cursor: 'default', 
       transition: 'transform 0.2s ease', 
-      border: '1px solid #e5e7eb',
-      '&:hover': {
-        transform: 'translateY(-2px)',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
-      }
+      border: '1px solid #e5e7eb'
     },
     mentorHeader: { 
       display: 'flex', 
-      alignItems: 'flex-start', 
-      gap: '1rem', 
-      marginBottom: '0.75rem' 
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: isMobile ? 'flex-start' : 'flex-start', 
+      gap: isMobile ? '0.75rem' : '1rem', 
+      marginBottom: isMobile ? '0.5rem' : '0.75rem' 
     },
     mentorPhoto: { 
-      width: '80px', 
-      height: '80px', 
+      width: isMobile ? '64px' : '80px', 
+      height: isMobile ? '64px' : '80px', 
       borderRadius: '8px', 
       objectFit: 'cover', 
       border: '2px solid #e5e7eb' 
     },
     mentorInfo: { 
-      flex: 1 
+      flex: 1,
+      width: isMobile ? '100%' : 'auto'
     },
     mentorName: { 
-      fontSize: '1.1rem', 
+      fontSize: isMobile ? '1rem' : '1.1rem', 
       fontWeight: 700, 
       color: '#0f172a', 
       margin: '0 0 0.25rem 0' 
     },
     mentorRole: { 
       color: '#64748b', 
-      fontSize: '0.9rem', 
+      fontSize: isMobile ? '0.8rem' : '0.9rem', 
       marginBottom: '0.5rem' 
     },
     expertise: { 
       display: 'inline-block', 
       backgroundColor: '#f0f9ff', 
       color: '#0369a1', 
-      padding: '0.25rem 0.75rem', 
+      padding: isMobile ? '0.2rem 0.6rem' : '0.25rem 0.75rem', 
       borderRadius: '999px', 
-      fontSize: '0.85rem', 
+      fontSize: isMobile ? '0.75rem' : '0.85rem', 
       fontWeight: 600, 
-      marginBottom: '1rem' 
+      marginBottom: isMobile ? '0.75rem' : '1rem' 
     },
     mentorBio: { 
       color: '#475569', 
       lineHeight: '1.5', 
       marginBottom: '1rem',
-      fontSize: '0.95rem'
+      fontSize: isMobile ? '0.9rem' : '0.95rem'
+    },
+    statusRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: '0.5rem',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '0'
     },
     status: { 
       display: 'inline-block', 
-      padding: '0.25rem 0.6rem', 
+      padding: isMobile ? '0.2rem 0.5rem' : '0.25rem 0.6rem', 
       borderRadius: '999px', 
-      fontSize: '0.78rem', 
+      fontSize: isMobile ? '0.7rem' : '0.78rem', 
       fontWeight: 600 
     },
     active: { 
@@ -353,38 +367,31 @@ const Mentorship = () => {
     },
     actions: { 
       display: 'flex', 
-      gap: '0.5rem', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '0.5rem', 
       flexWrap: 'wrap' 
     },
     actionBtn: {
-      flex: 1,
+      flex: isMobile ? 'none' : 1,
       backgroundColor: '#0ea5e9', 
       color: 'white', 
       border: 'none', 
-      padding: '0.55rem 0.65rem', 
+      padding: isMobile ? '0.5rem 0.6rem' : '0.55rem 0.65rem', 
       borderRadius: '8px', 
       fontWeight: 600, 
       cursor: 'pointer', 
-      fontSize: '0.88rem',
+      fontSize: isMobile ? '0.8rem' : '0.88rem',
       transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#0284c7'
-      }
+      width: isMobile ? '100%' : 'auto'
     },
     viewBtn: { 
-      backgroundColor: '#4f46e5',
-      '&:hover': {
-        backgroundColor: '#4338ca'
-      }
+      backgroundColor: '#4f46e5'
     },
     assignBtn: { 
-      backgroundColor: '#0ea5e9',
+      backgroundColor: '#0ea5e9'
     },
     removeBtn: { 
-      backgroundColor: '#64748b',
-      '&:hover': {
-        backgroundColor: '#475569'
-      }
+      backgroundColor: '#64748b'
     },
     // Modal styles
     modalOverlay: { 
@@ -398,54 +405,51 @@ const Mentorship = () => {
       justifyContent: 'center', 
       alignItems: 'center', 
       zIndex: 1000, 
-      padding: '1.25rem', 
+      padding: isMobile ? '0.5rem' : '1.25rem', 
       overflowY: 'auto' 
     },
     modalContent: { 
       background: 'white', 
       borderRadius: '12px', 
       width: '100%', 
-      maxWidth: '720px', 
-      maxHeight: '90vh', 
+      maxWidth: isMobile ? '95%' : '720px', 
+      maxHeight: isMobile ? '95vh' : '90vh', 
       overflowY: 'auto',
       boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
     },
     modalHeader: { 
-      padding: '1.1rem', 
+      padding: isMobile ? '1rem' : '1.1rem', 
       borderBottom: '1px solid #e5e7eb', 
       display: 'flex', 
       justifyContent: 'space-between', 
       alignItems: 'center'
     },
     modalTitle: { 
-      fontSize: '1.25rem', 
+      fontSize: isMobile ? '1.1rem' : '1.25rem', 
       color: '#0f172a', 
       margin: 0 
     },
     closeBtn: { 
       background: 'none', 
       border: 'none', 
-      fontSize: '1.35rem', 
+      fontSize: isMobile ? '1.25rem' : '1.35rem', 
       cursor: 'pointer', 
       color: '#64748b',
-      width: '36px',
-      height: '36px',
+      width: isMobile ? '32px' : '36px',
+      height: isMobile ? '32px' : '36px',
       borderRadius: '50%',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#f3f4f6'
-      }
+      transition: 'background-color 0.2s'
     },
     modalBody: { 
-      padding: '1.25rem' 
+      padding: isMobile ? '1rem' : '1.25rem' 
     },
     form: { 
       display: 'flex', 
       flexDirection: 'column', 
-      gap: '1rem' 
+      gap: isMobile ? '0.75rem' : '1rem' 
     },
     field: { 
       display: 'flex', 
@@ -455,34 +459,24 @@ const Mentorship = () => {
     label: { 
       fontWeight: 600, 
       color: '#374151', 
-      fontSize: '0.9rem' 
+      fontSize: isMobile ? '0.85rem' : '0.9rem' 
     },
     input: { 
-      padding: '0.6rem', 
+      padding: isMobile ? '0.5rem' : '0.6rem', 
       border: '1px solid #d1d5db', 
       borderRadius: '8px', 
-      fontSize: '0.95rem',
-      transition: 'border-color 0.2s',
-      '&:focus': {
-        outline: 'none',
-        borderColor: '#0ea5e9',
-        boxShadow: '0 0 0 3px rgba(14, 165, 233, 0.1)'
-      }
+      fontSize: isMobile ? '0.9rem' : '0.95rem',
+      transition: 'border-color 0.2s'
     },
     textarea: { 
-      padding: '0.6rem', 
+      padding: isMobile ? '0.5rem' : '0.6rem', 
       border: '1px solid #d1d5db', 
       borderRadius: '8px', 
-      fontSize: '0.95rem', 
+      fontSize: isMobile ? '0.9rem' : '0.95rem', 
       fontFamily: 'inherit', 
       resize: 'vertical', 
       minHeight: '100px',
-      transition: 'border-color 0.2s',
-      '&:focus': {
-        outline: 'none',
-        borderColor: '#0ea5e9',
-        boxShadow: '0 0 0 3px rgba(14, 165, 233, 0.1)'
-      }
+      transition: 'border-color 0.2s'
     },
     userList: {
       maxHeight: '400px',
@@ -492,27 +486,21 @@ const Mentorship = () => {
       backgroundColor: '#f9fafb'
     },
     userItem: {
-      padding: '1rem',
+      padding: isMobile ? '0.75rem' : '1rem',
       borderBottom: '1px solid #e5e7eb',
       display: 'flex',
       alignItems: 'center',
-      gap: '1rem',
+      gap: isMobile ? '0.75rem' : '1rem',
       cursor: 'pointer',
-      transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#f0f9ff'
-      },
-      '&:last-child': {
-        borderBottom: 'none'
-      }
+      transition: 'background-color 0.2s'
     },
     userItemSelected: {
       backgroundColor: '#dbeafe',
-      borderLeft: '4px solid #0ea5e9'
+      borderLeft: isMobile ? '3px solid #0ea5e9' : '4px solid #0ea5e9'
     },
     userItemPhoto: {
-      width: '50px',
-      height: '50px',
+      width: isMobile ? '40px' : '50px',
+      height: isMobile ? '40px' : '50px',
       borderRadius: '8px',
       objectFit: 'cover',
       border: '2px solid #e5e7eb'
@@ -524,18 +512,20 @@ const Mentorship = () => {
       fontWeight: 600,
       color: '#1e293b',
       margin: 0,
-      fontSize: '1rem',
+      fontSize: isMobile ? '0.9rem' : '1rem',
       display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem'
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: isMobile ? 'flex-start' : 'center',
+      gap: isMobile ? '0.25rem' : '0.5rem'
     },
     userItemRole: {
       backgroundColor: '#e0e7ff',
       color: '#4f46e5',
       padding: '0.125rem 0.5rem',
       borderRadius: '999px',
-      fontSize: '0.75rem',
-      fontWeight: 600
+      fontSize: isMobile ? '0.7rem' : '0.75rem',
+      fontWeight: 600,
+      alignSelf: 'flex-start'
     },
     searchContainer: {
       position: 'relative',
@@ -549,28 +539,24 @@ const Mentorship = () => {
       color: '#9ca3af'
     },
     searchInput: {
-      padding: '0.6rem 0.6rem 0.6rem 2.5rem',
+      padding: isMobile ? '0.5rem 0.5rem 0.5rem 2.25rem' : '0.6rem 0.6rem 0.6rem 2.5rem',
       border: '1px solid #d1d5db',
       borderRadius: '8px',
-      fontSize: '0.95rem',
+      fontSize: isMobile ? '0.9rem' : '0.95rem',
       width: '100%',
-      transition: 'border-color 0.2s',
-      '&:focus': {
-        outline: 'none',
-        borderColor: '#0ea5e9',
-        boxShadow: '0 0 0 3px rgba(14, 165, 233, 0.1)'
-      }
+      transition: 'border-color 0.2s'
     },
     resultsCount: {
-      fontSize: '0.875rem',
+      fontSize: isMobile ? '0.8rem' : '0.875rem',
       color: '#6b7280',
       marginBottom: '0.75rem',
       textAlign: 'right'
     },
     modalActions: {
       display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
       justifyContent: 'flex-end',
-      gap: '0.75rem',
+      gap: isMobile ? '0.5rem' : '0.75rem',
       paddingTop: '1rem',
       borderTop: '1px solid #e5e7eb',
       marginTop: '1rem'
@@ -579,31 +565,59 @@ const Mentorship = () => {
       backgroundColor: '#6b7280',
       color: 'white',
       border: 'none',
-      padding: '0.55rem 1rem',
+      padding: isMobile ? '0.5rem 0.75rem' : '0.55rem 1rem',
       borderRadius: '8px',
       fontWeight: 600,
       cursor: 'pointer',
       transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#4b5563'
-      }
+      width: isMobile ? '100%' : 'auto'
     },
     submitBtn: {
       backgroundColor: '#0ea5e9',
       color: 'white',
       border: 'none',
-      padding: '0.55rem 1rem',
+      padding: isMobile ? '0.5rem 0.75rem' : '0.55rem 1rem',
       borderRadius: '8px',
       fontWeight: 600,
       cursor: 'pointer',
       transition: 'background-color 0.2s',
-      '&:hover': {
-        backgroundColor: '#0284c7'
-      },
-      '&:disabled': {
-        backgroundColor: '#9ca3af',
-        cursor: 'not-allowed'
-      }
+      width: isMobile ? '100%' : 'auto'
+    },
+    viewModalContent: {
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '1rem' : '1rem',
+      alignItems: isMobile ? 'flex-start' : 'center',
+      marginBottom: '1.5rem'
+    },
+    viewModalImage: {
+      width: isMobile ? '100%' : '100px',
+      height: isMobile ? '120px' : '100px',
+      borderRadius: '12px',
+      objectFit: 'cover',
+      border: '3px solid #e5e7eb'
+    },
+    menteeItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem',
+      padding: isMobile ? '0.6rem' : '0.75rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '8px',
+      border: '1px solid #e5e7eb',
+      marginBottom: '0.5rem',
+      flexDirection: isMobile ? 'column' : 'row'
+    },
+    menteeImage: {
+      width: isMobile ? '48px' : '40px',
+      height: isMobile ? '48px' : '40px',
+      borderRadius: '8px',
+      border: '2px solid #e5e7eb'
+    },
+    menteeInfo: {
+      flex: 1,
+      width: isMobile ? '100%' : 'auto',
+      textAlign: isMobile ? 'center' : 'left'
     }
   };
 
@@ -623,12 +637,16 @@ const Mentorship = () => {
             <button 
               style={styles.primaryBtn} 
               onClick={handleOpenAddMentorModal}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#0284c7'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#0ea5e9'}
             >
               + Add Mentor
             </button>
             <button 
               style={styles.secondaryBtn}
               onClick={() => setShowAddMenteeModal(true)}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#475569'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#64748b'}
             >
               + Add Mentee
             </button>
@@ -679,7 +697,7 @@ const Mentorship = () => {
           <p>No mentors available yet.</p>
           {isAdmin && (
             <button 
-              style={styles.primaryBtn} 
+              style={{...styles.primaryBtn, marginTop: '1rem'}} 
               onClick={handleOpenAddMentorModal}
             >
               Add Your First Mentor
@@ -692,8 +710,8 @@ const Mentorship = () => {
             <div 
               key={mentor.id} 
               style={styles.mentorCard}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              onMouseEnter={e => !isMobile && (e.currentTarget.style.transform = 'translateY(-2px)')}
+              onMouseLeave={e => !isMobile && (e.currentTarget.style.transform = 'translateY(0)')}
             >
               <div style={styles.mentorHeader}>
                 <img
@@ -703,7 +721,7 @@ const Mentorship = () => {
                   onError={(e) => { e.target.src = '/default-avatar.png'; }}
                 />
                 <div style={styles.mentorInfo}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  <div style={styles.statusRow}>
                     <div>
                       <h3 style={styles.mentorName}>
                         {mentor.user?.firstName} {mentor.user?.lastName}
@@ -733,6 +751,8 @@ const Mentorship = () => {
                 <button 
                   style={{ ...styles.actionBtn, ...styles.viewBtn }}
                   onClick={() => openViewModal(mentor)}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#4338ca'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#4f46e5'}
                 >
                   View Details
                 </button>
@@ -741,12 +761,16 @@ const Mentorship = () => {
                     <button 
                       style={{ ...styles.actionBtn, ...styles.assignBtn }}
                       onClick={() => openAssignMenteeModal(mentor)}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#0284c7'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#0ea5e9'}
                     >
                       Assign Mentee
                     </button>
                     <button 
                       style={{ ...styles.actionBtn, ...styles.removeBtn }}
                       onClick={() => handleRemoveMentor(mentor.id)}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#475569'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#64748b'}
                     >
                       Remove
                     </button>
@@ -760,8 +784,22 @@ const Mentorship = () => {
 
       {/* Add Mentor Modal */}
       {showAddMentorModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={() => {
+          setShowAddMentorModal(false);
+          setSearchQuery('');
+          setMentorForm({
+            userId: '',
+            areaOfExpertise: '',
+            bio: '',
+            maxMentees: 5,
+            communicationChannels: ['email'],
+            availability: {
+              days: ['Monday', 'Wednesday', 'Friday'],
+              timeSlots: ['9:00-12:00', '14:00-17:00']
+            }
+          });
+        }}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Add New Mentor</h2>
               <button 
@@ -781,6 +819,8 @@ const Mentorship = () => {
                     }
                   });
                 }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
               >
                 ×
               </button>
@@ -798,6 +838,7 @@ const Mentorship = () => {
                   placeholder="Search users by name or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={(e) => e.target.style.outline = 'none'}
                 />
               </div>
 
@@ -839,6 +880,8 @@ const Mentorship = () => {
                         ...(mentorForm.userId === user.id ? styles.userItemSelected : {})
                       }}
                       onClick={() => setMentorForm({ ...mentorForm, userId: user.id })}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f9ff'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = mentorForm.userId === user.id ? '#dbeafe' : 'transparent'}
                     >
                       <img
                         src={user.profilePhoto || '/default-avatar.png'}
@@ -853,7 +896,7 @@ const Mentorship = () => {
                             {user.role?.charAt(0).toUpperCase() + user.role?.slice(1) || 'User'}
                           </span>
                         </h4>
-                        <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0.25rem 0 0 0' }}>
+                        <p style={{ color: '#64748b', fontSize: isMobile ? '0.8rem' : '0.85rem', margin: '0.25rem 0 0 0' }}>
                           {user.email}
                         </p>
                       </div>
@@ -880,6 +923,7 @@ const Mentorship = () => {
                       onChange={(e) => setMentorForm({ ...mentorForm, areaOfExpertise: e.target.value })}
                       placeholder="e.g., Pastoral Ministry, Theology, Counseling"
                       required
+                      onFocus={(e) => e.target.style.outline = 'none'}
                     />
                   </div>
 
@@ -890,6 +934,7 @@ const Mentorship = () => {
                       value={mentorForm.bio}
                       onChange={(e) => setMentorForm({ ...mentorForm, bio: e.target.value })}
                       placeholder="Tell us about your experience and background..."
+                      onFocus={(e) => e.target.style.outline = 'none'}
                     />
                   </div>
                 </form>
@@ -913,6 +958,8 @@ const Mentorship = () => {
                       }
                     });
                   }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#4b5563'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#6b7280'}
                 >
                   Cancel
                 </button>
@@ -920,6 +967,8 @@ const Mentorship = () => {
                   style={styles.submitBtn}
                   onClick={handleAddMentor}
                   disabled={!mentorForm.userId || !mentorForm.areaOfExpertise}
+                  onMouseEnter={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#0284c7')}
+                  onMouseLeave={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#0ea5e9')}
                 >
                   Add as Mentor
                 </button>
@@ -931,8 +980,8 @@ const Mentorship = () => {
 
       {/* Assign Mentee Modal */}
       {showAssignMenteeModal && selectedMentor && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={() => setShowAssignMenteeModal(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>
                 Assign Mentee to {selectedMentor.user?.firstName} {selectedMentor.user?.lastName}
@@ -940,6 +989,8 @@ const Mentorship = () => {
               <button 
                 style={styles.closeBtn}
                 onClick={() => setShowAssignMenteeModal(false)}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
               >
                 ×
               </button>
@@ -959,6 +1010,8 @@ const Mentorship = () => {
                         ...(assignMenteeForm.menteeId === mentee.id ? styles.userItemSelected : {})
                       }}
                       onClick={() => setAssignMenteeForm({ menteeId: mentee.id })}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f9ff'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = assignMenteeForm.menteeId === mentee.id ? '#dbeafe' : 'transparent'}
                     >
                       <img
                         src={mentee.user?.profilePhoto || '/default-avatar.png'}
@@ -969,7 +1022,7 @@ const Mentorship = () => {
                         <h4 style={styles.userItemName}>
                           {mentee.user?.firstName} {mentee.user?.lastName}
                         </h4>
-                        <p style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                        <p style={{ color: '#64748b', fontSize: isMobile ? '0.8rem' : '0.85rem' }}>
                           {mentee.learningGoals?.substring(0, 50)}...
                         </p>
                       </div>
@@ -982,6 +1035,8 @@ const Mentorship = () => {
                 <button 
                   style={styles.cancelBtn}
                   onClick={() => setShowAssignMenteeModal(false)}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#4b5563'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#6b7280'}
                 >
                   Cancel
                 </button>
@@ -989,6 +1044,8 @@ const Mentorship = () => {
                   style={styles.submitBtn}
                   onClick={handleAssignMentee}
                   disabled={!assignMenteeForm.menteeId}
+                  onMouseEnter={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#0284c7')}
+                  onMouseLeave={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#0ea5e9')}
                 >
                   Assign Mentee
                 </button>
@@ -1000,8 +1057,8 @@ const Mentorship = () => {
 
       {/* View Mentor Details Modal */}
       {showViewModal && selectedMentor && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={() => setShowViewModal(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>
                 {selectedMentor.user?.firstName} {selectedMentor.user?.lastName}
@@ -1009,22 +1066,24 @@ const Mentorship = () => {
               <button 
                 style={styles.closeBtn}
                 onClick={() => setShowViewModal(false)}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
               >
                 ×
               </button>
             </div>
             <div style={styles.modalBody}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div style={styles.viewModalContent}>
                 <img
                   src={selectedMentor.user?.profilePhoto || '/default-avatar.png'}
                   alt={selectedMentor.user?.firstName}
-                  style={{ width: 100, height: 100, borderRadius: 12, objectFit: 'cover', border: '3px solid #e5e7eb' }}
+                  style={styles.viewModalImage}
                 />
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 18, color: '#0f172a' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: isMobile ? 16 : 18, color: '#0f172a' }}>
                     {selectedMentor.areaOfExpertise}
                   </div>
-                  <div style={{ color: '#64748b', marginTop: 6 }}>
+                  <div style={{ color: '#64748b', marginTop: 6, fontSize: isMobile ? '0.85rem' : '1rem' }}>
                     {selectedMentor.user?.role} • {selectedMentor.status}
                   </div>
                   <div style={{ marginTop: 8 }}>
@@ -1039,14 +1098,16 @@ const Mentorship = () => {
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ marginBottom: '0.5rem', color: '#374151' }}>Bio</h4>
-                <p style={{ color: '#475569', lineHeight: 1.6, padding: '1rem', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                <h4 style={{ marginBottom: '0.5rem', color: '#374151', fontSize: isMobile ? '0.95rem' : '1rem' }}>Bio</h4>
+                <p style={{ color: '#475569', lineHeight: 1.6, padding: isMobile ? '0.75rem' : '1rem', backgroundColor: '#f8fafc', borderRadius: '8px', fontSize: isMobile ? '0.9rem' : '1rem' }}>
                   {selectedMentor.bio || 'No bio available.'}
                 </p>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ marginBottom: '0.5rem', color: '#374151' }}>Current Mentees ({selectedMentor.mentees?.length || 0})</h4>
+                <h4 style={{ marginBottom: '0.5rem', color: '#374151', fontSize: isMobile ? '0.95rem' : '1rem' }}>
+                  Current Mentees ({selectedMentor.mentees?.length || 0})
+                </h4>
                 {selectedMentor.mentees?.length === 0 ? (
                   <p style={{ padding: '1rem', textAlign: 'center', color: '#64748b', backgroundColor: '#f8fafc', borderRadius: '8px' }}>
                     No mentees assigned yet.
@@ -1054,25 +1115,17 @@ const Mentorship = () => {
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {selectedMentor.mentees?.map(mentee => (
-                      <div key={mentee.id} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '1rem',
-                        padding: '0.75rem',
-                        backgroundColor: '#f8fafc',
-                        borderRadius: '8px',
-                        border: '1px solid #e5e7eb'
-                      }}>
+                      <div key={mentee.id} style={styles.menteeItem}>
                         <img
                           src={mentee.user?.profilePhoto || '/default-avatar.png'}
                           alt={mentee.user?.firstName}
-                          style={{ width: '40px', height: '40px', borderRadius: '8px', border: '2px solid #e5e7eb' }}
+                          style={styles.menteeImage}
                         />
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, color: '#1e293b' }}>
+                        <div style={styles.menteeInfo}>
+                          <div style={{ fontWeight: 600, color: '#1e293b', fontSize: isMobile ? '0.9rem' : '1rem' }}>
                             {mentee.user?.firstName} {mentee.user?.lastName}
                           </div>
-                          <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
+                          <div style={{ fontSize: isMobile ? '0.8rem' : '0.9rem', color: '#64748b' }}>
                             {mentee.learningGoals?.substring(0, 60)}...
                           </div>
                         </div>
@@ -1083,16 +1136,16 @@ const Mentorship = () => {
                               backgroundColor: '#64748b',
                               color: 'white',
                               border: 'none',
-                              padding: '0.5rem 1rem',
+                              padding: isMobile ? '0.4rem 0.75rem' : '0.5rem 1rem',
                               borderRadius: '6px',
                               cursor: 'pointer',
-                              fontSize: '0.85rem',
+                              fontSize: isMobile ? '0.8rem' : '0.85rem',
                               fontWeight: 600,
                               transition: 'background-color 0.2s',
-                              '&:hover': {
-                                backgroundColor: '#475569'
-                              }
+                              width: isMobile ? '100%' : 'auto'
                             }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#475569'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = '#64748b'}
                           >
                             Remove
                           </button>
@@ -1109,26 +1162,30 @@ const Mentorship = () => {
 
       {/* Add Mentee Modal */}
       {showAddMenteeModal && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={() => setShowAddMenteeModal(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Add New Mentee</h2>
               <button 
                 style={styles.closeBtn}
                 onClick={() => setShowAddMenteeModal(false)}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
               >
                 ×
               </button>
             </div>
             <div style={styles.modalBody}>
-              <p style={{ color: '#64748b', marginBottom: '1rem' }}>
+              <p style={{ color: '#64748b', marginBottom: '1rem', fontSize: isMobile ? '0.9rem' : '1rem' }}>
                 To add a mentee, first create a user through the Users section or ask the user to register.
                 Then you can assign them as a mentee here.
               </p>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={styles.modalActions}>
                 <button 
                   style={styles.cancelBtn}
                   onClick={() => setShowAddMenteeModal(false)}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#4b5563'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#6b7280'}
                 >
                   Close
                 </button>
@@ -1142,4 +1199,3 @@ const Mentorship = () => {
 };
 
 export default Mentorship;
-

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Mfundo\\Desktop\\bbm\\Backend\\Backend.csproj": {}
+    "C:\\Users\\Mfundo\\Desktop\\bbm\\backend\\Backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Mfundo\\Desktop\\bbm\\Backend\\Backend.csproj": {
+    "C:\\Users\\Mfundo\\Desktop\\bbm\\backend\\Backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Mfundo\\Desktop\\bbm\\Backend\\Backend.csproj",
+        "projectUniqueName": "C:\\Users\\Mfundo\\Desktop\\bbm\\backend\\Backend.csproj",
         "projectName": "Backend",
-        "projectPath": "C:\\Users\\Mfundo\\Desktop\\bbm\\Backend\\Backend.csproj",
+        "projectPath": "C:\\Users\\Mfundo\\Desktop\\bbm\\backend\\Backend.csproj",
         "packagesPath": "C:\\Users\\Mfundo\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Mfundo\\Desktop\\bbm\\Backend\\obj\\",
+        "outputPath": "C:\\Users\\Mfundo\\Desktop\\bbm\\backend\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

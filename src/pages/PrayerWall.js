@@ -9,15 +9,18 @@ const PrayerWall = () => {
   const [newRequest, setNewRequest] = useState('');
   const [urgency, setUrgency] = useState('medium');
   const [filter, setFilter] = useState('all'); // all, my, answered, urgent
-  const [stats, setStats] = useState({
-    totalRequests: 0,
-    answeredRequests: 0,
-    urgentRequests: 0,
-    recentRequests: 0,
-    totalPrayers: 0,
-    userPrayers: 0,
-    userAnsweredPrayers: 0
-  });
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check for mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Simplified palette: only greens + muted neutrals (removed blue/red)
   const PRIMARY = '#10b981'; // green
@@ -27,7 +30,6 @@ const PrayerWall = () => {
 
   useEffect(() => {
     loadPrayerRequests();
-    loadStats();
   }, [filter]);
 
   const loadPrayerRequests = async () => {
@@ -59,15 +61,6 @@ const PrayerWall = () => {
     }
   };
 
-  const loadStats = async () => {
-    try {
-      const response = await prayerWallAPI.getStats();
-      setStats(response.data);
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
-
   const handleAddRequest = async () => {
     if (newRequest.trim()) {
       try {
@@ -81,7 +74,6 @@ const PrayerWall = () => {
         setPrayerRequests(prev => [response.data, ...prev]);
         setNewRequest('');
         setUrgency('medium');
-        loadStats(); // Refresh stats
       } catch (error) {
         console.error('Error creating prayer request:', error);
         alert('Failed to create prayer request. Please try again.');
@@ -99,8 +91,6 @@ const PrayerWall = () => {
           ? { ...req, prayerCount: (req.prayerCount || 0) + 1 }
           : req
       ));
-
-      loadStats(); // Refresh stats
     } catch (error) {
       console.error('Error adding prayer:', error);
       alert('Failed to add prayer. Please try again.');
@@ -118,7 +108,6 @@ const PrayerWall = () => {
           : req
       ));
 
-      loadStats(); // Refresh stats
       alert('Prayer request marked as answered!');
     } catch (error) {
       console.error('Error updating prayer request:', error);
@@ -133,7 +122,6 @@ const PrayerWall = () => {
 
         // Remove from local state
         setPrayerRequests(prev => prev.filter(req => req.id !== prayerRequestId));
-        loadStats(); // Refresh stats
       } catch (error) {
         console.error('Error deleting prayer request:', error);
         alert('Failed to delete prayer request. Please try again.');
@@ -158,40 +146,42 @@ const PrayerWall = () => {
     page: {
       maxWidth: '1100px',
       margin: '0 auto',
-      padding: '0 1rem 3rem',
+      padding: isMobile ? '0 0.75rem 2rem' : '0 1rem 3rem',
       color: PRIMARY_DARK,
       fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
     },
-    header: { marginBottom: '1.25rem' },
-    title: { fontSize: '1.75rem', color: PRIMARY_DARK, marginBottom: '0.25rem' },
-    subtitle: { color: MUTED, fontSize: '0.95rem' },
-
-    stats: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-      gap: '0.75rem',
-      margin: '1.25rem 0 1.75rem'
+    header: { 
+      marginBottom: isMobile ? '1rem' : '1.25rem',
+      textAlign: isMobile ? 'center' : 'left'
     },
-    statCard: {
-      backgroundColor: 'white',
-      padding: '1rem',
-      borderRadius: '10px',
-      boxShadow: '0 6px 18px rgba(15,23,42,0.03)',
-      textAlign: 'center',
-      border: `1px solid rgba(16,185,129,0.12)`
+    title: { 
+      fontSize: isMobile ? '1.5rem' : '1.75rem', 
+      color: PRIMARY_DARK, 
+      marginBottom: '0.25rem',
+      textAlign: isMobile ? 'center' : 'left'
     },
-    statNumber: { fontSize: '1.5rem', fontWeight: 700, color: PRIMARY_DARK, marginBottom: '0.25rem' },
-    statLabel: { color: MUTED, fontSize: '0.85rem' },
+    subtitle: { 
+      color: MUTED, 
+      fontSize: isMobile ? '0.9rem' : '0.95rem',
+      textAlign: isMobile ? 'center' : 'left'
+    },
 
-    filters: { display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' },
+    filters: { 
+      display: 'flex', 
+      gap: '0.5rem', 
+      marginBottom: '1rem', 
+      flexWrap: 'wrap',
+      justifyContent: isMobile ? 'center' : 'flex-start'
+    },
     filterButton: {
-      padding: '0.5rem 0.9rem',
+      padding: isMobile ? '0.4rem 0.7rem' : '0.5rem 0.9rem',
       borderRadius: '999px',
       backgroundColor: 'white',
       cursor: 'pointer',
-      fontSize: '0.9rem',
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
       color: MUTED,
-      border: '1px solid rgba(0,0,0,0.06)'
+      border: '1px solid rgba(0,0,0,0.06)',
+      minWidth: isMobile ? '80px' : 'auto'
     },
     filterButtonActive: {
       backgroundColor: PRIMARY_DARK,
@@ -202,37 +192,38 @@ const PrayerWall = () => {
     content: {
       backgroundColor: 'white',
       borderRadius: '12px',
-      padding: '1.5rem',
+      padding: isMobile ? '1rem' : '1.5rem',
       boxShadow: '0 8px 30px rgba(15,23,42,0.03)'
     },
     addSection: {
-      marginBottom: '1.25rem',
-      padding: '1rem',
+      marginBottom: isMobile ? '1rem' : '1.25rem',
+      padding: isMobile ? '0.75rem' : '1rem',
       backgroundColor: '#f8fafc',
       borderRadius: '10px',
       border: '1px solid rgba(0,0,0,0.03)'
     },
     textarea: {
       width: '100%',
-      padding: '0.9rem',
+      padding: isMobile ? '0.75rem' : '0.9rem',
       border: '1px solid rgba(15,23,42,0.06)',
       borderRadius: '8px',
-      fontSize: '0.98rem',
+      fontSize: isMobile ? '0.95rem' : '0.98rem',
       resize: 'vertical',
-      minHeight: '100px',
+      minHeight: '80px',
       marginBottom: '0.75rem',
       fontFamily: 'inherit',
       color: PRIMARY_DARK,
       backgroundColor: 'white'
     },
     urgencySelect: {
-      padding: '0.5rem',
+      padding: isMobile ? '0.4rem' : '0.5rem',
       border: '1px solid rgba(15,23,42,0.06)',
       borderRadius: '6px',
-      marginBottom: '0.75rem',
-      fontSize: '0.95rem',
+      marginBottom: isMobile ? '0.5rem' : '0.75rem',
+      fontSize: isMobile ? '0.9rem' : '0.95rem',
       color: PRIMARY_DARK,
-      backgroundColor: 'white'
+      backgroundColor: 'white',
+      width: isMobile ? '100%' : 'auto'
     },
 
     // Button variants with distinct states but no blue/red
@@ -240,102 +231,184 @@ const PrayerWall = () => {
       backgroundColor: PRIMARY_DARK,
       color: 'white',
       border: 'none',
-      padding: '0.6rem 1.1rem',
+      padding: isMobile ? '0.5rem 1rem' : '0.6rem 1.1rem',
       borderRadius: '8px',
       fontWeight: 700,
       cursor: 'pointer',
-      fontSize: '0.95rem',
-      boxShadow: '0 6px 20px rgba(4,120,87,0.12)'
+      fontSize: isMobile ? '0.9rem' : '0.95rem',
+      boxShadow: '0 6px 20px rgba(4,120,87,0.12)',
+      width: isMobile ? '100%' : 'auto'
     },
     addButtonDisabled: {
       backgroundColor: 'rgba(16,185,129,0.35)',
       color: 'white',
       border: 'none',
-      padding: '0.6rem 1.1rem',
+      padding: isMobile ? '0.5rem 1rem' : '0.6rem 1.1rem',
       borderRadius: '8px',
       fontWeight: 700,
       cursor: 'not-allowed',
-      fontSize: '0.95rem'
+      fontSize: isMobile ? '0.9rem' : '0.95rem',
+      width: isMobile ? '100%' : 'auto'
     },
 
     prayerCard: {
       backgroundColor: '#ffffff',
-      padding: '1rem',
+      padding: isMobile ? '0.75rem' : '1rem',
       borderRadius: '10px',
-      marginBottom: '0.85rem',
+      marginBottom: isMobile ? '0.75rem' : '0.85rem',
       border: '1px solid rgba(15,23,42,0.03)',
       position: 'relative'
     },
-    prayerHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' },
+    prayerHeader: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: isMobile ? 'flex-start' : 'flex-start', 
+      marginBottom: '0.5rem',
+      gap: isMobile ? '0.5rem' : '0'
+    },
     prayerUserInfo: { flex: 1 },
-    prayerName: { fontWeight: 700, color: PRIMARY_DARK },
-    prayerDate: { color: MUTED, fontSize: '0.85rem' },
-    prayerMeta: { display: 'flex', gap: '0.5rem', alignItems: 'center' },
+    prayerName: { 
+      fontWeight: 700, 
+      color: PRIMARY_DARK,
+      fontSize: isMobile ? '0.95rem' : '1rem'
+    },
+    prayerDate: { 
+      color: MUTED, 
+      fontSize: isMobile ? '0.8rem' : '0.85rem' 
+    },
+    prayerMeta: { 
+      display: 'flex', 
+      gap: '0.5rem', 
+      alignItems: 'center',
+      flexWrap: 'wrap'
+    },
 
     urgencyBadge: (u) => ({
       padding: '0.25rem 0.6rem',
       borderRadius: '999px',
-      fontSize: '0.78rem',
+      fontSize: isMobile ? '0.7rem' : '0.78rem',
       fontWeight: 700,
       textTransform: 'uppercase',
       ...getUrgencyStyles(u)
     }),
 
-    missionaryBadge: { backgroundColor: '#f1f5f9', color: PRIMARY_DARK, padding: '0.25rem 0.6rem', borderRadius: '999px', fontSize: '0.78rem' },
+    missionaryBadge: { 
+      backgroundColor: '#f1f5f9', 
+      color: PRIMARY_DARK, 
+      padding: '0.25rem 0.6rem', 
+      borderRadius: '999px', 
+      fontSize: isMobile ? '0.7rem' : '0.78rem' 
+    },
 
-    prayerText: { marginBottom: '0.75rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', color: PRIMARY_DARK },
+    prayerText: { 
+      marginBottom: isMobile ? '0.5rem' : '0.75rem', 
+      lineHeight: 1.6, 
+      whiteSpace: 'pre-wrap', 
+      color: PRIMARY_DARK,
+      fontSize: isMobile ? '0.9rem' : '1rem'
+    },
 
-    prayerActions: { display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' },
-    prayerButtons: { display: 'flex', gap: '0.6rem', alignItems: 'center' },
+    prayerActions: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.75rem' : '1rem', 
+      alignItems: isMobile ? 'flex-start' : 'center', 
+      justifyContent: 'space-between' 
+    },
+    prayerButtons: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '0.6rem', 
+      alignItems: 'flex-start',
+      width: isMobile ? '100%' : 'auto'
+    },
 
     // distinct buttons but using greens / neutral outlines
     prayButton: {
       backgroundColor: PRIMARY,
       color: 'white',
       border: 'none',
-      padding: '0.45rem 0.9rem',
+      padding: isMobile ? '0.4rem 0.8rem' : '0.45rem 0.9rem',
       borderRadius: '8px',
       cursor: 'pointer',
-      fontSize: '0.9rem',
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
       fontWeight: 700,
-      boxShadow: '0 6px 18px rgba(16,185,129,0.12)'
+      boxShadow: '0 6px 18px rgba(16,185,129,0.12)',
+      width: isMobile ? '100%' : 'auto'
     },
 
     answeredButton: {
       backgroundColor: 'transparent',
       color: PRIMARY_DARK,
       border: `1px solid ${PRIMARY_DARK}`,
-      padding: '0.45rem 0.9rem',
+      padding: isMobile ? '0.4rem 0.8rem' : '0.45rem 0.9rem',
       borderRadius: '8px',
       cursor: 'pointer',
-      fontSize: '0.9rem',
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
       fontWeight: 700,
-      boxShadow: 'none'
+      boxShadow: 'none',
+      width: isMobile ? '100%' : 'auto'
     },
 
     deleteButton: {
       backgroundColor: 'transparent',
       color: MUTED,
       border: '1px solid rgba(15,23,42,0.06)',
-      padding: '0.45rem 0.9rem',
+      padding: isMobile ? '0.4rem 0.8rem' : '0.45rem 0.9rem',
       borderRadius: '8px',
       cursor: 'pointer',
-      fontSize: '0.9rem',
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
       fontWeight: 700,
-      boxShadow: 'none'
+      boxShadow: 'none',
+      width: isMobile ? '100%' : 'auto'
     },
 
     statusBadge: (isAnswered) => ({
       padding: '0.25rem 0.6rem',
       borderRadius: '999px',
-      fontSize: '0.78rem',
+      fontSize: isMobile ? '0.7rem' : '0.78rem',
       fontWeight: 700,
       backgroundColor: isAnswered ? PRIMARY_LIGHT : '#f1f5f9',
       color: isAnswered ? PRIMARY_DARK : MUTED
     }),
 
-    answeredInfo: { marginTop: '0.8rem', padding: '0.6rem', backgroundColor: PRIMARY_LIGHT, borderRadius: '8px', color: MUTED, fontSize: '0.9rem' },
-    loading: { textAlign: 'center', padding: '2rem', color: PRIMARY_DARK }
+    answeredInfo: { 
+      marginTop: '0.8rem', 
+      padding: isMobile ? '0.5rem' : '0.6rem', 
+      backgroundColor: PRIMARY_LIGHT, 
+      borderRadius: '8px', 
+      color: MUTED, 
+      fontSize: isMobile ? '0.85rem' : '0.9rem' 
+    },
+    loading: { 
+      textAlign: 'center', 
+      padding: '2rem', 
+      color: PRIMARY_DARK 
+    },
+
+    // New styles for mobile form layout
+    formControls: {
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.6rem' : '0.6rem',
+      alignItems: isMobile ? 'stretch' : 'center',
+      marginBottom: isMobile ? '0.5rem' : '0.75rem'
+    },
+    formButtons: {
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '0',
+      alignItems: 'stretch',
+      width: isMobile ? '100%' : 'auto'
+    },
+    urgencyContainer: {
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '0.6rem',
+      alignItems: isMobile ? 'stretch' : 'center',
+      width: isMobile ? '100%' : 'auto'
+    }
   };
 
   if (loading) {
@@ -351,25 +424,6 @@ const PrayerWall = () => {
       <div style={styles.header}>
         <h1 style={styles.title}>Prayer Wall</h1>
         <p style={styles.subtitle}>Share your prayer requests and pray for others</p>
-      </div>
-
-      <div style={styles.stats}>
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.totalRequests || 0}</div>
-          <div style={styles.statLabel}>Total Requests</div>
-        </div>
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.answeredRequests || 0}</div>
-          <div style={styles.statLabel}>Answered</div>
-        </div>
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.urgentRequests || 0}</div>
-          <div style={styles.statLabel}>Urgent</div>
-        </div>
-        <div style={styles.statCard}>
-          <div style={styles.statNumber}>{stats.userPrayers || 0}</div>
-          <div style={styles.statLabel}>Your Requests</div>
-        </div>
       </div>
 
       <div style={styles.filters}>
@@ -401,7 +455,7 @@ const PrayerWall = () => {
 
       <div style={styles.content}>
         <div style={styles.addSection}>
-          <h3 style={{ margin: 0, marginBottom: '0.5rem' }}>Add Your Prayer Request</h3>
+          <h3 style={{ margin: 0, marginBottom: '0.5rem', fontSize: isMobile ? '1rem' : '1.1rem' }}>Add Your Prayer Request</h3>
           <textarea
             value={newRequest}
             onChange={(e) => setNewRequest(e.target.value)}
@@ -409,34 +463,47 @@ const PrayerWall = () => {
             style={styles.textarea}
             aria-label="New prayer request"
           />
-          <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <select
-              value={urgency}
-              onChange={(e) => setUrgency(e.target.value)}
-              style={styles.urgencySelect}
-              aria-label="Urgency"
-            >
-              <option value="low">Low Urgency</option>
-              <option value="medium">Medium Urgency</option>
-              <option value="high">High Urgency</option>
-            </select>
-
-            <div style={{ marginLeft: 'auto' }}>
-              <button
-                style={newRequest.trim() ? styles.addButton : styles.addButtonDisabled}
-                onClick={handleAddRequest}
-                disabled={!newRequest.trim()}
+          <div style={styles.formControls}>
+            <div style={styles.urgencyContainer}>
+              <select
+                value={urgency}
+                onChange={(e) => setUrgency(e.target.value)}
+                style={styles.urgencySelect}
+                aria-label="Urgency"
               >
-                Submit
-              </button>
+                <option value="low">Low Urgency</option>
+                <option value="medium">Medium Urgency</option>
+                <option value="high">High Urgency</option>
+              </select>
+
+              <div style={styles.formButtons}>
+                <button
+                  style={newRequest.trim() ? styles.addButton : styles.addButtonDisabled}
+                  onClick={handleAddRequest}
+                  disabled={!newRequest.trim()}
+                >
+                  Submit
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <div>
-          <h3 style={{ marginTop: 0 }}>Prayer Requests ({prayerRequests.length})</h3>
+          <h3 style={{ 
+            marginTop: 0, 
+            fontSize: isMobile ? '1.1rem' : '1.2rem',
+            textAlign: isMobile ? 'center' : 'left'
+          }}>
+            Prayer Requests ({prayerRequests.length})
+          </h3>
           {prayerRequests.length === 0 ? (
-            <p style={{ textAlign: 'center', color: MUTED, padding: '2rem' }}>
+            <p style={{ 
+              textAlign: 'center', 
+              color: MUTED, 
+              padding: isMobile ? '1.5rem' : '2rem',
+              fontSize: isMobile ? '0.9rem' : '1rem'
+            }}>
               No prayer requests found. {filter === 'my' ? 'You haven\'t posted any prayer requests yet.' : 'Be the first to share one!'}
             </p>
           ) : (

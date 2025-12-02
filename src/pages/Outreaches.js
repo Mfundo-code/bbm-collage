@@ -12,6 +12,7 @@ const Outreaches = () => {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('ongoing');
   const [selected, setSelected] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Report states
   const [isReporting, setIsReporting] = useState(false);
@@ -34,6 +35,17 @@ const Outreaches = () => {
 
   const fileInputRef = useRef(null);
   const outreachFileInputRef = useRef(null);
+
+  // Check for mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Fetch outreaches from API
   const fetchOutreaches = async () => {
@@ -255,66 +267,327 @@ const Outreaches = () => {
   // Filter outreaches based on active tab
   const filtered = outreaches.filter((o) => o.status === activeTab);
 
-  // Design tokens and styles (kept the same)
+  // Design tokens and styles
   const PRIMARY = '#06b6d4';
   const PRIMARY_HOVER = '#0aa9c3';
   const DANGER = '#ef4444';
   const SUCCESS = '#10b981';
 
   const styles = {
-    page: { maxWidth: '980px', margin: '0 auto', width: '100%', fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', padding: '2rem' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' },
-    titleWrap: { display: 'flex', flexDirection: 'column' },
-    title: { fontSize: '2rem', color: '#0f172a', margin: 0, fontWeight: 800 },
-    subtitle: { color: '#64748b', fontSize: '1.05rem', marginTop: '0.25rem' },
+    page: { 
+      maxWidth: '980px', 
+      margin: '0 auto', 
+      width: '100%', 
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial', 
+      padding: isMobile ? '1rem' : '2rem',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center'
+    },
+    header: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: isMobile ? 'center' : 'center',
+      marginBottom: '1.5rem',
+      width: '100%',
+      textAlign: isMobile ? 'center' : 'left',
+      gap: isMobile ? '1rem' : '0'
+    },
+    titleWrap: { 
+      display: 'flex', 
+      flexDirection: 'column',
+      alignItems: isMobile ? 'center' : 'flex-start'
+    },
+    title: { 
+      fontSize: isMobile ? '1.5rem' : '2rem', 
+      color: '#0f172a', 
+      margin: 0, 
+      fontWeight: 800,
+      textAlign: 'center'
+    },
+    subtitle: { 
+      color: '#64748b', 
+      fontSize: isMobile ? '0.9rem' : '1.05rem', 
+      marginTop: '0.25rem',
+      textAlign: 'center'
+    },
 
-    tabBar: { display: 'flex', gap: 12, marginTop: '1rem' },
-    tab: (active) => ({ padding: '0.55rem 0.9rem', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: '0.95rem', background: active ? PRIMARY : 'transparent', color: active ? '#fff' : PRIMARY, border: `1px solid ${PRIMARY}`, boxShadow: active ? '0 6px 18px rgba(6,182,212,0.08)' : 'none' }),
+    tabBar: { 
+      display: 'flex', 
+      gap: 12, 
+      marginTop: '1rem',
+      justifyContent: 'center',
+      flexWrap: 'wrap'
+    },
+    tab: (active) => ({ 
+      padding: '0.55rem 0.9rem', 
+      borderRadius: 10, 
+      cursor: 'pointer', 
+      fontWeight: 700, 
+      fontSize: '0.95rem', 
+      background: active ? PRIMARY : 'transparent', 
+      color: active ? '#fff' : PRIMARY, 
+      border: `1px solid ${PRIMARY}`, 
+      boxShadow: active ? '0 6px 18px rgba(6,182,212,0.08)' : 'none',
+      minWidth: isMobile ? '120px' : 'auto',
+      textAlign: 'center'
+    }),
 
-    grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 18, marginTop: 18 },
-    card: { background: 'white', borderRadius: 12, padding: '1.25rem', boxShadow: '0 8px 24px rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.03)', display: 'flex', flexDirection: 'column', gap: 10 },
-    cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
-    cardTitle: { fontSize: '1.05rem', fontWeight: 800, color: '#062a2a' },
-    tag: (status) => ({ padding: '6px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: status === 'ongoing' ? '#ecfeff' : '#f8fafc', color: status === 'ongoing' ? '#065f46' : '#64748b', border: `1px solid ${status === 'ongoing' ? '#67f6ea' : '#e6eef8'}` }),
+    grid: { 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(280px,1fr))', 
+      gap: 18, 
+      marginTop: 18,
+      width: '100%'
+    },
+    card: { 
+      background: 'white', 
+      borderRadius: 12, 
+      padding: isMobile ? '1rem' : '1.25rem', 
+      boxShadow: '0 8px 24px rgba(15,23,42,0.04)', 
+      border: '1px solid rgba(15,23,42,0.03)', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: 10,
+      textAlign: 'center'
+    },
+    cardHeader: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: isMobile ? 'center' : 'flex-start', 
+      gap: 12 
+    },
+    cardTitle: { 
+      fontSize: isMobile ? '1rem' : '1.05rem', 
+      fontWeight: 800, 
+      color: '#062a2a',
+      textAlign: 'center'
+    },
+    tag: (status) => ({ 
+      padding: '6px 12px', 
+      borderRadius: 999, 
+      fontSize: 12, 
+      fontWeight: 700, 
+      background: status === 'ongoing' ? '#ecfeff' : '#f8fafc', 
+      color: status === 'ongoing' ? '#065f46' : '#64748b', 
+      border: `1px solid ${status === 'ongoing' ? '#67f6ea' : '#e6eef8'}`,
+      marginTop: isMobile ? '0.5rem' : '0'
+    }),
 
-    meta: { color: '#64748b', fontSize: 13 },
-    description: { color: '#334155', lineHeight: 1.6 },
+    meta: { 
+      color: '#64748b', 
+      fontSize: 13,
+      textAlign: 'center'
+    },
+    description: { 
+      color: '#334155', 
+      lineHeight: 1.6,
+      textAlign: 'center'
+    },
 
-    actions: { display: 'flex', gap: 10, marginTop: 'auto', justifyContent: 'flex-end' },
-    btn: { padding: '0.55rem 0.9rem', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 14, transition: 'all 0.2s ease' },
+    actions: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: 10, 
+      marginTop: 'auto', 
+      justifyContent: 'center',
+      width: '100%'
+    },
+    btn: { 
+      padding: '0.55rem 0.9rem', 
+      borderRadius: 10, 
+      border: 'none', 
+      cursor: 'pointer', 
+      fontWeight: 800, 
+      fontSize: 14, 
+      transition: 'all 0.2s ease',
+      width: isMobile ? '100%' : 'auto',
+      textAlign: 'center'
+    },
     btnPrimary: { background: PRIMARY, color: 'white' },
     btnSuccess: { background: SUCCESS, color: 'white' },
     btnGhost: { background: 'transparent', color: '#0f1724', border: '1px solid #e6eef8' },
 
-    headerActions: { display: 'flex', gap: 10 },
+    headerActions: { 
+      display: 'flex', 
+      gap: 10,
+      justifyContent: 'center',
+      width: isMobile ? '100%' : 'auto'
+    },
 
-    overlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(2,6,23,0.45)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: 20 },
-    modal: { background: 'white', borderRadius: 12, padding: '1.25rem', width: 'min(920px,95%)', maxHeight: '90vh', overflowY: 'auto' },
-    modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-    modalTitle: { fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' },
-    closeBtn: { background: 'transparent', border: 'none', fontSize: 22, cursor: 'pointer', color: '#64748b' },
+    overlay: { 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      bottom: 0, 
+      backgroundColor: 'rgba(2,6,23,0.45)', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      zIndex: 1000, 
+      padding: 20 
+    },
+    modal: { 
+      background: 'white', 
+      borderRadius: 12, 
+      padding: isMobile ? '1rem' : '1.25rem', 
+      width: isMobile ? '95%' : 'min(920px,95%)', 
+      maxHeight: '90vh', 
+      overflowY: 'auto',
+      margin: isMobile ? '1rem' : '0'
+    },
+    modalHeader: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      marginBottom: 12,
+      textAlign: 'center',
+      gap: isMobile ? '1rem' : '0'
+    },
+    modalTitle: { 
+      fontSize: isMobile ? '1.1rem' : '1.25rem', 
+      fontWeight: 800, 
+      color: '#0f172a',
+      textAlign: 'center'
+    },
+    closeBtn: { 
+      background: 'transparent', 
+      border: 'none', 
+      fontSize: 22, 
+      cursor: 'pointer', 
+      color: '#64748b',
+      alignSelf: isMobile ? 'center' : 'flex-start'
+    },
 
-    sectionTitle: { fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 },
-    twoCol: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 },
+    sectionTitle: { 
+      fontSize: isMobile ? '1rem' : '1.05rem', 
+      fontWeight: 700, 
+      color: '#0f172a', 
+      marginBottom: 8,
+      textAlign: 'center'
+    },
+    twoCol: { 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+      gap: 16, 
+      marginBottom: 12 
+    },
 
-    photosRow: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 },
-    photoThumb: { width: '100%', height: 120, objectFit: 'cover', borderRadius: 8, border: '1px solid #eef2f7' },
+    photosRow: { 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? 'repeat(auto-fit, minmax(100px, 1fr))' : 'repeat(auto-fit, minmax(120px, 1fr))', 
+      gap: 12,
+      justifyContent: 'center'
+    },
+    photoThumb: { 
+      width: '100%', 
+      height: isMobile ? '100px' : '120px', 
+      objectFit: 'cover', 
+      borderRadius: 8, 
+      border: '1px solid #eef2f7' 
+    },
 
-    reportCard: { background: '#ffffff', padding: 16, borderRadius: 10, marginBottom: 12, border: '1px solid #eef2f7' },
+    reportCard: { 
+      background: '#ffffff', 
+      padding: 16, 
+      borderRadius: 10, 
+      marginBottom: 12, 
+      border: '1px solid #eef2f7',
+      textAlign: 'center'
+    },
 
-    formContainer: { display: 'flex', flexDirection: 'column', gap: 12 },
-    formRow: { display: 'flex', flexDirection: 'column', gap: 8 },
-    label: { fontWeight: 700, color: '#0f172a', marginBottom: 6 },
-    input: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem', width: '100%' },
-    textarea: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem', minHeight: 120, resize: 'vertical', width: '100%' },
-    select: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: 8, fontSize: '1rem', width: '100%', background: 'white' },
+    formContainer: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: 12,
+      alignItems: 'center'
+    },
+    formRow: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: 8,
+      width: '100%',
+      alignItems: 'center'
+    },
+    label: { 
+      fontWeight: 700, 
+      color: '#0f172a', 
+      marginBottom: 6,
+      textAlign: 'center',
+      width: '100%'
+    },
+    input: { 
+      padding: '0.75rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: 8, 
+      fontSize: '1rem', 
+      width: '100%',
+      textAlign: 'center'
+    },
+    textarea: { 
+      padding: '0.75rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: 8, 
+      fontSize: '1rem', 
+      minHeight: 120, 
+      resize: 'vertical', 
+      width: '100%',
+      textAlign: 'center'
+    },
+    select: { 
+      padding: '0.75rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: 8, 
+      fontSize: '1rem', 
+      width: '100%', 
+      background: 'white',
+      textAlign: 'center'
+    },
 
-    addPhotosBox: { display: 'flex', alignItems: 'center', justifyContent: 'center', height: 120, borderRadius: 8, border: '2px dashed #e6eef8', cursor: 'pointer', background: '#fafafa' },
-    smallMuted: { fontSize: 13, color: '#64748b' },
+    addPhotosBox: { 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      height: isMobile ? '100px' : '120px', 
+      borderRadius: 8, 
+      border: '2px dashed #e6eef8', 
+      cursor: 'pointer', 
+      background: '#fafafa',
+      width: '100%'
+    },
+    smallMuted: { 
+      fontSize: 13, 
+      color: '#64748b',
+      textAlign: 'center'
+    },
 
-    modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 12 },
-    loading: { textAlign: 'center', padding: '2rem', color: '#64748b' },
-    error: { background: '#fef2f2', color: '#dc2626', padding: '1rem', borderRadius: 8, marginBottom: '1rem' }
+    modalActions: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'center', 
+      gap: 10, 
+      marginTop: 12,
+      width: '100%'
+    },
+    loading: { 
+      textAlign: 'center', 
+      padding: '2rem', 
+      color: '#64748b',
+      width: '100%'
+    },
+    error: { 
+      background: '#fef2f2', 
+      color: '#dc2626', 
+      padding: '1rem', 
+      borderRadius: 8, 
+      marginBottom: '1rem',
+      textAlign: 'center',
+      width: '100%'
+    }
   };
 
   const [hoveredCard, setHoveredCard] = useState(null);
@@ -362,7 +635,8 @@ const Outreaches = () => {
           color: '#64748b',
           background: '#f8fafc',
           borderRadius: '12px',
-          marginTop: '1rem'
+          marginTop: '1rem',
+          width: '100%'
         }}>
           <h3>No {activeTab} outreaches found</h3>
           <p>Create your first outreach to get started!</p>
@@ -411,14 +685,14 @@ const Outreaches = () => {
             <div style={styles.modalHeader}>
               <div>
                 <div style={styles.modalTitle}>{selected.title}</div>
-                <div style={{ color: '#64748b', marginTop: 6 }}>Leader: {selected.leader} • {selected.location}</div>
+                <div style={{ color: '#64748b', marginTop: 6, textAlign: 'center' }}>Leader: {selected.leader} • {selected.location}</div>
               </div>
               <button style={styles.closeBtn} onClick={closeDetails}>×</button>
             </div>
 
-            <div>
+            <div style={{ textAlign: 'center' }}>
               <div style={styles.sectionTitle}>Description</div>
-              <p style={{ marginTop: 0, color: '#334155', lineHeight: 1.6 }}>{selected.description}</p>
+              <p style={{ marginTop: 0, color: '#334155', lineHeight: 1.6, textAlign: 'center' }}>{selected.description}</p>
 
               <div style={{ marginTop: 12 }}>
                 <div style={styles.twoCol}>
@@ -432,7 +706,7 @@ const Outreaches = () => {
                   <div style={styles.sectionTitle}>Photos</div>
                   <div style={styles.photosRow}>
                     {(selected.photos || []).length === 0 ? (
-                      <div style={{ color: '#94a3b8' }}>No photos yet</div>
+                      <div style={{ color: '#94a3b8', textAlign: 'center', width: '100%' }}>No photos yet</div>
                     ) : (
                       (selected.photos || []).map((p, i) => <img key={i} src={p} alt={`photo-${i}`} style={styles.photoThumb} />)
                     )}
@@ -447,14 +721,14 @@ const Outreaches = () => {
                   ) : (
                     (selected.reports || []).map((r) => (
                       <div key={r.id} style={styles.reportCard}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <div>
+                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'center', gap: isMobile ? '0.5rem' : '0' }}>
+                          <div style={{ textAlign: 'center' }}>
                             <div style={{ fontWeight: 800, color: '#0f172a' }}>{r.title}</div>
                             <div style={{ color: '#64748b', fontSize: 13 }}>By {r.author} • {new Date(r.createdAt).toLocaleString()}</div>
                           </div>
                         </div>
 
-                        <p style={{ color: '#334155', marginTop: 8 }}>{r.description}</p>
+                        <p style={{ color: '#334155', marginTop: 8, textAlign: 'center' }}>{r.description}</p>
 
                         {r.photos && r.photos.length > 0 && (
                           <div style={styles.photosRow}>
@@ -510,7 +784,7 @@ const Outreaches = () => {
 
               <div style={styles.formRow}>
                 <label style={styles.label}>Photos</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginTop: 8, width: '100%' }}>
                   <div>
                     <div style={styles.photosRow}>
                       {reportPhotos.length === 0 ? (
@@ -560,7 +834,7 @@ const Outreaches = () => {
                     />
                   </div>
 
-                  <div>
+                  <div style={{ textAlign: 'center' }}>
                     <div style={styles.smallMuted}>Tip: Add multiple photos to showcase your outreach activities</div>
                     <div style={{ marginTop: 12 }}>
                       <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={handlePhotoClick}>Choose photos</button>
@@ -661,7 +935,7 @@ const Outreaches = () => {
 
               <div style={styles.formRow}>
                 <label style={styles.label}>Photos</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginTop: 8, width: '100%' }}>
                   <div>
                     <div style={styles.photosRow}>
                       {outreachPhotos.length === 0 ? (
@@ -711,7 +985,7 @@ const Outreaches = () => {
                     />
                   </div>
 
-                  <div>
+                  <div style={{ textAlign: 'center' }}>
                     <div style={styles.smallMuted}>Add photos to showcase the outreach location or previous activities</div>
                     <div style={{ marginTop: 12 }}>
                       <button style={{ ...styles.btn, ...styles.btnGhost }} onClick={handleOutreachPhotoClick}>Choose photos</button>

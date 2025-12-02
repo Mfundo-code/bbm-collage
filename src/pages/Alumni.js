@@ -23,6 +23,7 @@ const Alumni = () => {
   const [success, setSuccess] = useState('');
   const [credentials, setCredentials] = useState(null);
   const [copied, setCopied] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
 
   const [createFormData, setCreateFormData] = useState({
     email: '',
@@ -52,8 +53,14 @@ const Alumni = () => {
   });
 
   useEffect(() => {
+    const checkIfMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
     fetchAlumni();
     fetchFilters();
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, [filters]);
 
   const fetchAlumni = async () => {
@@ -324,63 +331,398 @@ const Alumni = () => {
     }
   };
 
+  // Responsive styles
   const styles = {
-    page: { maxWidth: '1200px', margin: '2rem auto', width: '95%', fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' },
-    header: { marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    page: { 
+      maxWidth: '1200px', 
+      margin: isMobile ? '1rem auto' : '2rem auto', 
+      width: isMobile ? '92%' : '95%', 
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' 
+    },
+    header: { 
+      marginBottom: isMobile ? '1rem' : '1.5rem', 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: isMobile ? 'flex-start' : 'center',
+      gap: isMobile ? '1rem' : '0'
+    },
     headerLeft: { flex: 1 },
-    title: { fontSize: '1.9rem', color: '#0f172a', margin: 0 },
-    subtitle: { color: '#64748b', fontSize: '0.95rem', marginTop: '0.25rem' },
-    createBtn: { backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '0.6rem 1.1rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.95rem', boxShadow: '0 6px 18px rgba(14,165,233,0.12)' },
-    alert: { padding: '0.85rem', borderRadius: '10px', marginBottom: '1rem', border: '1px solid' },
+    title: { 
+      fontSize: isMobile ? '1.5rem' : '1.9rem', 
+      color: '#0f172a', 
+      margin: 0 
+    },
+    subtitle: { 
+      color: '#64748b', 
+      fontSize: isMobile ? '0.85rem' : '0.95rem', 
+      marginTop: '0.25rem' 
+    },
+    createBtn: { 
+      backgroundColor: '#0ea5e9', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.9rem' : '0.6rem 1.1rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer', 
+      fontSize: isMobile ? '0.85rem' : '0.95rem', 
+      boxShadow: '0 6px 18px rgba(14,165,233,0.12)',
+      alignSelf: isMobile ? 'flex-start' : 'auto'
+    },
+    alert: { 
+      padding: isMobile ? '0.75rem' : '0.85rem', 
+      borderRadius: '10px', 
+      marginBottom: isMobile ? '0.75rem' : '1rem', 
+      border: '1px solid',
+      fontSize: isMobile ? '0.9rem' : '1rem'
+    },
     alertError: { backgroundColor: '#fff1f2', color: '#9f1239', borderColor: '#fecaca' },
     alertSuccess: { backgroundColor: '#ecfdf5', color: '#065f46', borderColor: '#bbf7d0' },
-    loading: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b' },
-    empty: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b', backgroundColor: 'white', borderRadius: '12px' },
-    grid: { display: 'flex', flexDirection: 'column', gap: '1.25rem' },
-    filters: { display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap' },
-    filter: { padding: '0.5rem', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '0.9rem' },
+    loading: { 
+      textAlign: 'center', 
+      padding: isMobile ? '3rem 1rem' : '4rem 2rem', 
+      color: '#64748b',
+      fontSize: isMobile ? '1rem' : '1.1rem'
+    },
+    empty: { 
+      textAlign: 'center', 
+      padding: isMobile ? '3rem 1rem' : '4rem 2rem', 
+      color: '#64748b', 
+      backgroundColor: 'white', 
+      borderRadius: '12px',
+      fontSize: isMobile ? '0.95rem' : '1rem'
+    },
+    grid: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: isMobile ? '1rem' : '1.25rem' 
+    },
+    filters: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.75rem' : '1rem', 
+      marginBottom: isMobile ? '1rem' : '1.5rem' 
+    },
+    filter: { 
+      padding: isMobile ? '0.65rem' : '0.5rem', 
+      border: '1px solid #e2e8f0', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.95rem' : '0.9rem' 
+    },
 
-    alumnusCard: { width: '100%', background: 'linear-gradient(180deg, #fff, #fbfbff)', borderRadius: '8px', padding: '1.25rem', boxShadow: '0 6px 18px rgba(15,23,42,0.05)', cursor: 'default', transition: 'transform 0.18s ease, box-shadow 0.18s ease', border: '1px solid rgba(15,23,42,0.03)' },
-    alumnusHeader: { display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' },
-    alumnusPhoto: { width: '96px', height: '96px', borderRadius: '10px', objectFit: 'cover', border: '2px solid #eef2ff' },
-    alumnusInfo: { flex: 1 },
-    alumnusName: { fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.25rem 0' },
-    alumnusGraduation: { color: '#8b5cf6', fontSize: '0.95rem', fontWeight: 700, marginBottom: '0.4rem' },
-    alumnusLocation: { color: '#475569', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' },
-    alumnusBio: { color: '#334155', lineHeight: '1.45', marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' },
-    skills: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' },
-    skill: { backgroundColor: '#e0e7ff', color: '#3730a3', padding: '0.25rem 0.5rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 },
-    actions: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' },
-    followBtn: { flex: 1, backgroundColor: '#0ea5e9', color: 'white', border: 'none', padding: '0.55rem 0.65rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' },
-    viewBtn: { backgroundColor: '#7c3aed', color: 'white', border: 'none', padding: '0.55rem 0.65rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' },
-    editBtn: { backgroundColor: '#f59e0b', color: 'white', border: 'none', padding: '0.55rem 0.65rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' },
-    deleteBtn: { backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '0.55rem 0.65rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', fontSize: '0.88rem' },
+    alumnusCard: { 
+      width: '100%', 
+      background: 'linear-gradient(180deg, #fff, #fbfbff)', 
+      borderRadius: '8px', 
+      padding: isMobile ? '1rem' : '1.25rem', 
+      boxShadow: '0 6px 18px rgba(15,23,42,0.05)', 
+      cursor: 'default', 
+      transition: 'transform 0.18s ease, box-shadow 0.18s ease', 
+      border: '1px solid rgba(15,23,42,0.03)' 
+    },
+    alumnusHeader: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: isMobile ? 'flex-start' : 'center',
+      gap: isMobile ? '0.75rem' : '1rem', 
+      marginBottom: isMobile ? '0.5rem' : '0.75rem' 
+    },
+    alumnusPhoto: { 
+      width: isMobile ? '72px' : '96px', 
+      height: isMobile ? '72px' : '96px', 
+      borderRadius: '10px', 
+      objectFit: 'cover', 
+      border: '2px solid #eef2ff' 
+    },
+    alumnusInfo: { flex: 1, width: isMobile ? '100%' : 'auto' },
+    alumnusName: { 
+      fontSize: isMobile ? '1rem' : '1.1rem', 
+      fontWeight: 800, 
+      color: '#0f172a', 
+      margin: '0 0 0.25rem 0' 
+    },
+    alumnusGraduation: { 
+      color: '#8b5cf6', 
+      fontSize: isMobile ? '0.85rem' : '0.95rem', 
+      fontWeight: 700, 
+      marginBottom: '0.4rem' 
+    },
+    alumnusLocation: { 
+      color: '#475569', 
+      fontSize: isMobile ? '0.85rem' : '0.9rem', 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '0.4rem', 
+      marginBottom: '0.4rem' 
+    },
+    alumnusBio: { 
+      color: '#334155', 
+      lineHeight: '1.45', 
+      marginBottom: '1rem', 
+      display: '-webkit-box', 
+      WebkitLineClamp: 3, 
+      WebkitBoxOrient: 'vertical', 
+      overflow: 'hidden',
+      fontSize: isMobile ? '0.9rem' : '1rem'
+    },
+    skills: { 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '0.5rem', 
+      marginBottom: isMobile ? '0.75rem' : '1rem' 
+    },
+    skill: { 
+      backgroundColor: '#e0e7ff', 
+      color: '#3730a3', 
+      padding: '0.25rem 0.5rem', 
+      borderRadius: '6px', 
+      fontSize: isMobile ? '0.7rem' : '0.75rem', 
+      fontWeight: 600 
+    },
+    actions: { 
+      display: 'flex', 
+      gap: '0.5rem', 
+      flexWrap: 'wrap', 
+      marginTop: '0.5rem' 
+    },
+    followBtn: { 
+      flex: isMobile ? 1 : 'none', 
+      backgroundColor: '#0ea5e9', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.6rem' : '0.55rem 0.65rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer', 
+      fontSize: isMobile ? '0.8rem' : '0.88rem',
+      minWidth: isMobile ? '60px' : 'auto'
+    },
+    viewBtn: { 
+      flex: isMobile ? 1 : 'none',
+      backgroundColor: '#7c3aed', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.6rem' : '0.55rem 0.65rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer', 
+      fontSize: isMobile ? '0.8rem' : '0.88rem',
+      minWidth: isMobile ? '60px' : 'auto'
+    },
+    editBtn: { 
+      flex: isMobile ? 1 : 'none',
+      backgroundColor: '#f59e0b', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.6rem' : '0.55rem 0.65rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer', 
+      fontSize: isMobile ? '0.8rem' : '0.88rem',
+      minWidth: isMobile ? '60px' : 'auto'
+    },
+    deleteBtn: { 
+      flex: isMobile ? 1 : 'none',
+      backgroundColor: '#ef4444', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.6rem' : '0.55rem 0.65rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer', 
+      fontSize: isMobile ? '0.8rem' : '0.88rem',
+      minWidth: isMobile ? '60px' : 'auto'
+    },
 
-    modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(2,6,23,0.45)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '1.25rem', overflowY: 'auto' },
-    modalContent: { background: 'white', borderRadius: '12px', width: '100%', maxWidth: '720px', maxHeight: '90vh', overflowY: 'auto' },
-    modalHeader: { padding: '1.1rem', borderBottom: '1px solid #eef2ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 1 },
-    modalTitle: { fontSize: '1.25rem', color: '#0f172a', margin: 0 },
-    closeBtn: { background: 'none', border: 'none', fontSize: '1.35rem', cursor: 'pointer', color: '#475569' },
-    modalBody: { padding: '1.25rem' },
-    form: { display: 'flex', flexDirection: 'column', gap: '1rem' },
-    formRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' },
-    field: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-    label: { fontWeight: 700, color: '#0f172a', fontSize: '0.9rem' },
-    input: { padding: '0.6rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '0.95rem' },
-    textarea: { padding: '0.6rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '0.95rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '100px' },
-    select: { padding: '0.6rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '0.95rem' },
-    fileLabel: { padding: '0.6rem', border: '1px dashed #7dd3fc', borderRadius: '8px', cursor: 'pointer', textAlign: 'center', color: '#0369a1', fontWeight: 700, transition: 'all 0.2s' },
+    modalOverlay: { 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      bottom: 0, 
+      backgroundColor: 'rgba(2,6,23,0.45)', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      zIndex: 1000, 
+      padding: isMobile ? '0.5rem' : '1.25rem', 
+      overflowY: 'auto' 
+    },
+    modalContent: { 
+      background: 'white', 
+      borderRadius: '12px', 
+      width: '100%', 
+      maxWidth: isMobile ? '95%' : '720px', 
+      maxHeight: isMobile ? '95vh' : '90vh', 
+      overflowY: 'auto' 
+    },
+    modalHeader: { 
+      padding: isMobile ? '0.9rem' : '1.1rem', 
+      borderBottom: '1px solid #eef2ff', 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      position: 'sticky', 
+      top: 0, 
+      backgroundColor: 'white', 
+      zIndex: 1 
+    },
+    modalTitle: { 
+      fontSize: isMobile ? '1.1rem' : '1.25rem', 
+      color: '#0f172a', 
+      margin: 0 
+    },
+    closeBtn: { 
+      background: 'none', 
+      border: 'none', 
+      fontSize: isMobile ? '1.5rem' : '1.35rem', 
+      cursor: 'pointer', 
+      color: '#475569' 
+    },
+    modalBody: { 
+      padding: isMobile ? '1rem' : '1.25rem' 
+    },
+    form: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: isMobile ? '0.75rem' : '1rem' 
+    },
+    formRow: { 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+      gap: isMobile ? '0.75rem' : '0.75rem' 
+    },
+    field: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: '0.5rem' 
+    },
+    label: { 
+      fontWeight: 700, 
+      color: '#0f172a', 
+      fontSize: isMobile ? '0.85rem' : '0.9rem' 
+    },
+    input: { 
+      padding: isMobile ? '0.5rem' : '0.6rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.9rem' : '0.95rem' 
+    },
+    textarea: { 
+      padding: isMobile ? '0.5rem' : '0.6rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.9rem' : '0.95rem', 
+      fontFamily: 'inherit', 
+      resize: 'vertical', 
+      minHeight: '100px' 
+    },
+    select: { 
+      padding: isMobile ? '0.5rem' : '0.6rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.9rem' : '0.95rem' 
+    },
+    fileLabel: { 
+      padding: isMobile ? '0.5rem' : '0.6rem', 
+      border: '1px dashed #7dd3fc', 
+      borderRadius: '8px', 
+      cursor: 'pointer', 
+      textAlign: 'center', 
+      color: '#0369a1', 
+      fontWeight: 700, 
+      transition: 'all 0.2s',
+      fontSize: isMobile ? '0.85rem' : '0.9rem'
+    },
     fileInput: { display: 'none' },
-    preview: { width: '120px', height: '120px', borderRadius: '12px', objectFit: 'cover', margin: '0.75rem auto', display: 'block', border: '2px solid #eef2ff' },
-    formActions: { display: 'flex', gap: '0.65rem', justifyContent: 'flex-end', paddingTop: '0.75rem', borderTop: '1px solid #eef2ff' },
-    cancelBtn: { backgroundColor: '#64748b', color: 'white', border: 'none', padding: '0.55rem 1rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' },
-    submitBtn: { backgroundColor: '#06b6d4', color: 'white', border: 'none', padding: '0.55rem 1rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' },
-    credBox: { padding: '1rem', borderRadius: '8px', background: '#f8fafc', border: '1px dashed #e6eef7', display: 'flex', gap: '0.75rem', alignItems: 'center' },
-    smallBtn: { padding: '0.45rem 0.6rem', borderRadius: '8px', border: 'none', fontWeight: 700, cursor: 'pointer' },
-    tagInput: { display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' },
-    tagList: { display: 'flex', flexWrap: 'wrap', gap: '0.5rem' },
-    contactItem: { display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' },
-    contactList: { marginTop: '0.5rem' }
+    preview: { 
+      width: isMobile ? '100px' : '120px', 
+      height: isMobile ? '100px' : '120px', 
+      borderRadius: '12px', 
+      objectFit: 'cover', 
+      margin: '0.75rem auto', 
+      display: 'block', 
+      border: '2px solid #eef2ff' 
+    },
+    formActions: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '0.65rem', 
+      justifyContent: 'flex-end', 
+      paddingTop: '0.75rem', 
+      borderTop: '1px solid #eef2ff' 
+    },
+    cancelBtn: { 
+      backgroundColor: '#64748b', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.75rem' : '0.55rem 1rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer',
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
+      width: isMobile ? '100%' : 'auto'
+    },
+    submitBtn: { 
+      backgroundColor: '#06b6d4', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.75rem' : '0.55rem 1rem', 
+      borderRadius: '10px', 
+      fontWeight: 800, 
+      cursor: 'pointer',
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
+      width: isMobile ? '100%' : 'auto'
+    },
+    credBox: { 
+      padding: isMobile ? '0.75rem' : '1rem', 
+      borderRadius: '8px', 
+      background: '#f8fafc', 
+      border: '1px dashed #e6eef7', 
+      display: 'flex', 
+      gap: isMobile ? '0.5rem' : '0.75rem', 
+      alignItems: 'center' 
+    },
+    smallBtn: { 
+      padding: isMobile ? '0.4rem 0.5rem' : '0.45rem 0.6rem', 
+      borderRadius: '8px', 
+      border: 'none', 
+      fontWeight: 700, 
+      cursor: 'pointer',
+      fontSize: isMobile ? '0.8rem' : '0.85rem'
+    },
+    tagInput: { 
+      display: 'flex', 
+      gap: '0.5rem', 
+      marginBottom: '0.5rem',
+      flexDirection: isMobile ? 'column' : 'row'
+    },
+    tagList: { 
+      display: 'flex', 
+      flexWrap: 'wrap', 
+      gap: '0.5rem' 
+    },
+    contactItem: { 
+      display: 'flex', 
+      gap: '0.5rem', 
+      alignItems: 'center', 
+      marginBottom: '0.5rem',
+      flexDirection: isMobile ? 'column' : 'row'
+    },
+    contactList: { marginTop: '0.5rem' },
+    viewModalContent: {
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '1rem' : '1rem',
+      alignItems: isMobile ? 'flex-start' : 'center'
+    },
+    viewModalImage: {
+      width: isMobile ? '100%' : '110px',
+      height: isMobile ? '140px' : '110px',
+      borderRadius: '12px',
+      objectFit: 'cover'
+    }
   };
 
   if (loading) {
@@ -395,7 +737,12 @@ const Alumni = () => {
           <p style={styles.subtitle}>Connect with graduates from Mission Bible School around the world</p>
         </div>
         {isAdmin && (
-          <button style={styles.createBtn} onClick={() => setShowCreateForm(true)}>
+          <button 
+            style={styles.createBtn} 
+            onClick={() => setShowCreateForm(true)}
+            onMouseEnter={(e) => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 8px 20px rgba(14,165,233,0.2)'; }}
+            onMouseLeave={(e) => { e.target.style.transform = 'none'; e.target.style.boxShadow = '0 6px 18px rgba(14,165,233,0.12)'; }}
+          >
             + Create Alumni
           </button>
         )}
@@ -432,6 +779,14 @@ const Alumni = () => {
       {alumni.length === 0 ? (
         <div style={styles.empty}>
           <p>No alumni registered yet.</p>
+          {isAdmin && (
+            <button 
+              style={{...styles.createBtn, marginTop: '1rem'}} 
+              onClick={() => setShowCreateForm(true)}
+            >
+              + Create First Alumni
+            </button>
+          )}
         </div>
       ) : (
         <div style={styles.grid}>
@@ -466,29 +821,49 @@ const Alumni = () => {
 
               {alumnus.skills && alumnus.skills.length > 0 && (
                 <div style={styles.skills}>
-                  {alumnus.skills.slice(0, 4).map((skill, index) => (
+                  {alumnus.skills.slice(0, isMobile ? 3 : 4).map((skill, index) => (
                     <span key={index} style={styles.skill}>{skill}</span>
                   ))}
-                  {alumnus.skills.length > 4 && (
-                    <span style={styles.skill}>+{alumnus.skills.length - 4} more</span>
+                  {alumnus.skills.length > (isMobile ? 3 : 4) && (
+                    <span style={styles.skill}>+{alumnus.skills.length - (isMobile ? 3 : 4)} more</span>
                   )}
                 </div>
               )}
 
               <div style={styles.actions}>
-                <button style={styles.followBtn} onClick={() => handleFollow(alumnus.user.id)}>
+                <button 
+                  style={styles.followBtn} 
+                  onClick={() => handleFollow(alumnus.user.id)}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                >
                   Follow
                 </button>
-                <button style={styles.viewBtn} onClick={() => openView(alumnus)}>
+                <button 
+                  style={styles.viewBtn} 
+                  onClick={() => openView(alumnus)}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                >
                   View
                 </button>
                 {canEdit(alumnus) && (
-                  <button style={styles.editBtn} onClick={() => openEditForm(alumnus)}>
+                  <button 
+                    style={styles.editBtn} 
+                    onClick={() => openEditForm(alumnus)}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                  >
                     Edit
                   </button>
                 )}
                 {isAdmin && (
-                  <button style={styles.deleteBtn} onClick={() => handleDelete(alumnus.user.id)}>
+                  <button 
+                    style={styles.deleteBtn} 
+                    onClick={() => handleDelete(alumnus.user.id)}
+                    onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
+                    onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                  >
                     Delete
                   </button>
                 )}
@@ -500,8 +875,8 @@ const Alumni = () => {
 
       {/* Create Form Modal */}
       {showCreateForm && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={() => setShowCreateForm(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Create New Alumni</h2>
               <button style={styles.closeBtn} onClick={() => setShowCreateForm(false)}>×</button>
@@ -663,8 +1038,8 @@ const Alumni = () => {
 
       {/* Edit Form Modal */}
       {showEditForm && selectedAlumnus && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={() => setShowEditForm(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>Edit Alumni Profile</h2>
               <button style={styles.closeBtn} onClick={() => setShowEditForm(false)}>×</button>
@@ -810,17 +1185,21 @@ const Alumni = () => {
 
       {/* View Modal */}
       {showViewModal && selectedAlumnus && (
-        <div style={styles.modalOverlay}>
-          <div style={styles.modalContent}>
+        <div style={styles.modalOverlay} onClick={() => setShowViewModal(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>{selectedAlumnus.user.firstName} {selectedAlumnus.user.lastName}</h2>
               <button style={styles.closeBtn} onClick={() => setShowViewModal(false)}>×</button>
             </div>
             <div style={styles.modalBody}>
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <img src={selectedAlumnus.user.profilePhoto || '/default-avatar.png'} alt="pic" style={{ width: 110, height: 110, borderRadius: 12, objectFit: 'cover' }} />
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: 18 }}>Class of {selectedAlumnus.graduationYear}</div>
+              <div style={styles.viewModalContent}>
+                <img 
+                  src={selectedAlumnus.user.profilePhoto || '/default-avatar.png'} 
+                  alt="pic" 
+                  style={styles.viewModalImage} 
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 800, fontSize: isMobile ? 16 : 18 }}>Class of {selectedAlumnus.graduationYear}</div>
                   <div style={{ color: '#475569', marginTop: 6 }}>📍 {selectedAlumnus.currentLocation || 'Location not specified'}</div>
                   <div style={{ color: '#475569', marginTop: 6 }}>✉️ {selectedAlumnus.user.email}</div>
                   {selectedAlumnus.user.contactPhone && (
@@ -830,13 +1209,15 @@ const Alumni = () => {
               </div>
 
               <div style={{ marginTop: 16 }}>
-                <h3 style={{ margin: 0, fontSize: 16 }}>Bio</h3>
-                <p style={{ color: '#334155', lineHeight: 1.5 }}>{selectedAlumnus.bio || 'No bio available.'}</p>
+                <h3 style={{ margin: 0, fontSize: isMobile ? 15 : 16 }}>Bio</h3>
+                <p style={{ color: '#334155', lineHeight: 1.5, fontSize: isMobile ? '0.9rem' : '1rem' }}>
+                  {selectedAlumnus.bio || 'No bio available.'}
+                </p>
               </div>
 
               {selectedAlumnus.skills && selectedAlumnus.skills.length > 0 && (
                 <div style={{ marginTop: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 16 }}>Skills</h3>
+                  <h3 style={{ margin: 0, fontSize: isMobile ? 15 : 16 }}>Skills</h3>
                   <div style={styles.skills}>
                     {selectedAlumnus.skills.map((skill, index) => (
                       <span key={index} style={styles.skill}>{skill}</span>
@@ -847,12 +1228,12 @@ const Alumni = () => {
 
               {selectedAlumnus.publicContact && Object.keys(selectedAlumnus.publicContact).length > 0 && (
                 <div style={{ marginTop: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 16 }}>Contact Information</h3>
+                  <h3 style={{ margin: 0, fontSize: isMobile ? 15 : 16 }}>Contact Information</h3>
                   <div style={styles.contactList}>
                     {Object.entries(selectedAlumnus.publicContact).map(([key, value]) => (
-                      <div key={key} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <span style={{ fontWeight: 600, minWidth: '80px' }}>{key}:</span>
-                        <span>{value}</span>
+                      <div key={key} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem', flexDirection: isMobile ? 'column' : 'row' }}>
+                        <span style={{ fontWeight: 600, minWidth: isMobile ? '100%' : '80px' }}>{key}:</span>
+                        <span style={{ wordBreak: 'break-word' }}>{value}</span>
                       </div>
                     ))}
                   </div>
@@ -861,12 +1242,12 @@ const Alumni = () => {
 
               {selectedAlumnus.linkedProfiles && Object.keys(selectedAlumnus.linkedProfiles).length > 0 && (
                 <div style={{ marginTop: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 16 }}>Linked Profiles</h3>
+                  <h3 style={{ margin: 0, fontSize: isMobile ? 15 : 16 }}>Linked Profiles</h3>
                   <div style={styles.contactList}>
                     {Object.entries(selectedAlumnus.linkedProfiles).map(([platform, url]) => (
-                      <div key={platform} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <span style={{ fontWeight: 600, minWidth: '80px' }}>{platform}:</span>
-                        <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9' }}>{url}</a>
+                      <div key={platform} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.25rem', flexDirection: isMobile ? 'column' : 'row' }}>
+                        <span style={{ fontWeight: 600, minWidth: isMobile ? '100%' : '80px' }}>{platform}:</span>
+                        <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', wordBreak: 'break-word' }}>{url}</a>
                       </div>
                     ))}
                   </div>
@@ -879,8 +1260,8 @@ const Alumni = () => {
 
       {/* Credentials modal */}
       {credentials && (
-        <div style={styles.modalOverlay}>
-          <div style={{ ...styles.modalContent, maxWidth: 520 }}>
+        <div style={styles.modalOverlay} onClick={() => setCredentials(null)}>
+          <div style={{ ...styles.modalContent, maxWidth: isMobile ? '95%' : 520 }} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h3 style={styles.modalTitle}>New Account Credentials</h3>
               <button style={styles.closeBtn} onClick={() => setCredentials(null)}>×</button>
@@ -889,7 +1270,7 @@ const Alumni = () => {
               <div style={styles.credBox}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 800 }}>Email</div>
-                  <div style={{ marginTop: 6 }}>{credentials.email}</div>
+                  <div style={{ marginTop: 6, wordBreak: 'break-all' }}>{credentials.email}</div>
                 </div>
               </div>
 
@@ -898,13 +1279,13 @@ const Alumni = () => {
               <div style={styles.credBox}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 800 }}>Temporary Password</div>
-                  <div style={{ marginTop: 6 }}>{credentials.password}</div>
+                  <div style={{ marginTop: 6, wordBreak: 'break-all' }}>{credentials.password}</div>
                 </div>
               </div>
 
-              <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <div style={{ marginTop: 12, display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'flex-end', gap: 8 }}>
                 <button style={styles.cancelBtn} onClick={() => setCredentials(null)}>Close</button>
-                <button style={{ ...styles.submitBtn }} onClick={() => { copyCredentials(); setSuccess('Credentials copied to clipboard.'); setTimeout(() => setSuccess(''), 2500); }}>
+                <button style={{ ...styles.submitBtn, width: isMobile ? '100%' : 'auto' }} onClick={() => { copyCredentials(); setSuccess('Credentials copied to clipboard.'); setTimeout(() => setSuccess(''), 2500); }}>
                   {copied === 'both' ? 'Copied' : 'Copy Credentials'}
                 </button>
               </div>

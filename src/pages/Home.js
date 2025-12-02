@@ -1,4 +1,3 @@
-// src/pages/Home.fixed.jsx
 import React, { useState, useEffect } from 'react';
 import { postsAPI, interactionsAPI } from '../services/api';
 import { fileUpload } from '../services/fileUpload';
@@ -21,10 +20,16 @@ const Home = () => {
     tags: []
   });
   const { user, canManagePosts } = useAuth();
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const checkIfMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
     fetchUpdates();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
   const fetchUpdates = async () => {
@@ -144,70 +149,379 @@ const Home = () => {
   const fileUploadStyles = {
     fileInput: { marginBottom: '1rem' },
     fileList: { marginBottom: '1rem' },
-    fileItem: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#f8fafc', borderRadius: '6px', marginBottom: '0.5rem' },
-    fileName: { flex: 1, fontSize: '0.9rem', color: '#374151' },
-    removeFile: { background: 'none', border: 'none', color: DANGER, cursor: 'pointer', fontSize: '1rem' },
+    fileItem: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '0.4rem' : '0.5rem', backgroundColor: '#f8fafc', borderRadius: '6px', marginBottom: '0.5rem' },
+    fileName: { flex: 1, fontSize: isMobile ? '0.8rem' : '0.9rem', color: '#374151' },
+    removeFile: { background: 'none', border: 'none', color: DANGER, cursor: 'pointer', fontSize: isMobile ? '0.9rem' : '1rem' },
     uploadProgress: { padding: '1rem', textAlign: 'center', color: '#64748b' }
   };
 
   const styles = {
-    page: { maxWidth: '900px', margin: '0 auto', width: '100%', fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial' },
-    header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' },
-    title: { fontSize: '2rem', color: '#0f172a', margin: 0 },
-    subtitle: { color: '#64748b', fontSize: '1.05rem', margin: '0.25rem 0 0 0' },
-    addBtn: { backgroundColor: PRIMARY, color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer', fontSize: '1rem', boxShadow: '0 6px 18px rgba(6,182,212,0.08)' },
-    formOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(2,6,23,0.45)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-    formContainer: { background: 'white', borderRadius: '12px', padding: '2rem', width: '90%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' },
-    form: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
-    formTitle: { fontSize: '1.25rem', color: '#0f172a', margin: 0 },
-    field: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-    label: { fontWeight: 700, color: '#0f172a' },
-    input: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit' },
-    textarea: { padding: '0.75rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '1rem', fontFamily: 'inherit', resize: 'vertical', minHeight: '120px' },
-    checkbox: { display: 'flex', alignItems: 'center', gap: '0.5rem' },
-    formActions: { display: 'flex', gap: '1rem', justifyContent: 'flex-end' },
-    cancelBtn: { backgroundColor: '#64748b', color: 'white', border: 'none', padding: '0.65rem 1rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer' },
-    submitBtn: { backgroundColor: PRIMARY, color: 'white', border: 'none', padding: '0.65rem 1rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' },
+    page: { 
+      maxWidth: '900px', 
+      margin: '0 auto', 
+      width: '100%', 
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+      padding: isMobile ? '1rem' : '0'
+    },
+    header: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: isMobile ? 'flex-start' : 'center', 
+      marginBottom: isMobile ? '1.5rem' : '2rem',
+      gap: isMobile ? '1rem' : '0'
+    },
+    headerText: { flex: 1 },
+    title: { 
+      fontSize: isMobile ? '1.5rem' : '2rem', 
+      color: '#0f172a', 
+      margin: 0,
+      textAlign: isMobile ? 'left' : 'left'
+    },
+    subtitle: { 
+      color: '#64748b', 
+      fontSize: isMobile ? '0.9rem' : '1.05rem', 
+      margin: '0.25rem 0 0 0' 
+    },
+    addBtn: { 
+      backgroundColor: PRIMARY, 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.85rem' : '0.6rem 1rem', 
+      borderRadius: '10px', 
+      fontWeight: 800, 
+      cursor: 'pointer', 
+      fontSize: isMobile ? '0.9rem' : '1rem', 
+      boxShadow: '0 6px 18px rgba(6,182,212,0.08)',
+      alignSelf: isMobile ? 'flex-start' : 'auto'
+    },
+    formOverlay: { 
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      bottom: 0, 
+      backgroundColor: 'rgba(2,6,23,0.45)', 
+      display: 'flex', 
+      justifyContent: 'center', 
+      alignItems: 'center', 
+      zIndex: 1000,
+      padding: isMobile ? '0.5rem' : '0'
+    },
+    formContainer: { 
+      background: 'white', 
+      borderRadius: '12px', 
+      padding: isMobile ? '1.25rem' : '2rem', 
+      width: isMobile ? '95%' : '90%', 
+      maxWidth: isMobile ? '95%' : '680px', 
+      maxHeight: isMobile ? '95vh' : '90vh', 
+      overflowY: 'auto' 
+    },
+    form: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: isMobile ? '1rem' : '1.5rem' 
+    },
+    formTitle: { 
+      fontSize: isMobile ? '1.1rem' : '1.25rem', 
+      color: '#0f172a', 
+      margin: 0 
+    },
+    field: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: '0.5rem' 
+    },
+    label: { 
+      fontWeight: 700, 
+      color: '#0f172a',
+      fontSize: isMobile ? '0.9rem' : '1rem'
+    },
+    input: { 
+      padding: isMobile ? '0.6rem' : '0.75rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.9rem' : '1rem', 
+      fontFamily: 'inherit' 
+    },
+    textarea: { 
+      padding: isMobile ? '0.6rem' : '0.75rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.9rem' : '1rem', 
+      fontFamily: 'inherit', 
+      resize: 'vertical', 
+      minHeight: isMobile ? '100px' : '120px' 
+    },
+    checkbox: { 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '0.5rem' 
+    },
+    formActions: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '1rem', 
+      justifyContent: 'flex-end' 
+    },
+    cancelBtn: { 
+      backgroundColor: '#64748b', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.75rem' : '0.65rem 1rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer',
+      width: isMobile ? '100%' : 'auto'
+    },
+    submitBtn: { 
+      backgroundColor: PRIMARY, 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.75rem' : '0.65rem 1rem', 
+      borderRadius: '10px', 
+      fontWeight: 800, 
+      cursor: 'pointer',
+      width: isMobile ? '100%' : 'auto'
+    },
 
-    loading: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b' },
-    empty: { textAlign: 'center', padding: '4rem 2rem', color: '#64748b', backgroundColor: 'white', borderRadius: '12px' },
+    loading: { 
+      textAlign: 'center', 
+      padding: isMobile ? '3rem 1rem' : '4rem 2rem', 
+      color: '#64748b',
+      fontSize: isMobile ? '0.95rem' : '1rem'
+    },
+    empty: { 
+      textAlign: 'center', 
+      padding: isMobile ? '3rem 1rem' : '4rem 2rem', 
+      color: '#64748b', 
+      backgroundColor: 'white', 
+      borderRadius: '12px',
+      fontSize: isMobile ? '0.95rem' : '1rem'
+    },
 
-    updateCard: { background: 'white', borderRadius: '12px', padding: '1.5rem', marginBottom: '1.5rem', boxShadow: '0 8px 24px rgba(15,23,42,0.04)', border: '1px solid rgba(15,23,42,0.03)' },
-    updateHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' },
-    authorInfo: { display: 'flex', alignItems: 'center', gap: '1rem' },
-    avatar: { width: '50px', height: '50px', borderRadius: '50%', background: 'linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1.1rem' },
-    authorDetails: { display: 'flex', flexDirection: 'column' },
-    authorName: { fontWeight: 700, color: '#0f172a', fontSize: '1.05rem' },
-    postDate: { color: '#64748b', fontSize: '0.9rem' },
+    updateCard: { 
+      background: 'white', 
+      borderRadius: '12px', 
+      padding: isMobile ? '1rem' : '1.5rem', 
+      marginBottom: isMobile ? '1rem' : '1.5rem', 
+      boxShadow: '0 8px 24px rgba(15,23,42,0.04)', 
+      border: '1px solid rgba(15,23,42,0.03)' 
+    },
+    updateHeader: { 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'flex-start', 
+      marginBottom: isMobile ? '0.75rem' : '1rem' 
+    },
+    authorInfo: { 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: isMobile ? '0.75rem' : '1rem' 
+    },
+    avatar: { 
+      width: isMobile ? '40px' : '50px', 
+      height: isMobile ? '40px' : '50px', 
+      borderRadius: '50%', 
+      background: 'linear-gradient(135deg, #06b6d4 0%, #0ea5e9 100%)', 
+      color: 'white', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      fontWeight: 700, 
+      fontSize: isMobile ? '0.95rem' : '1.1rem' 
+    },
+    authorDetails: { 
+      display: 'flex', 
+      flexDirection: 'column' 
+    },
+    authorName: { 
+      fontWeight: 700, 
+      color: '#0f172a', 
+      fontSize: isMobile ? '0.95rem' : '1.05rem' 
+    },
+    postDate: { 
+      color: '#64748b', 
+      fontSize: isMobile ? '0.8rem' : '0.9rem' 
+    },
+    deleteBtn: {
+      background: 'none',
+      border: 'none',
+      color: DANGER,
+      cursor: 'pointer',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      padding: isMobile ? '0.3rem' : '0.4rem',
+      borderRadius: '6px'
+    },
 
-    updateTitle: { fontSize: '1.125rem', color: '#0f172a', margin: '0 0 0.5rem 0' },
-    updateBody: { color: '#334155', lineHeight: '1.6', marginBottom: '1rem', whiteSpace: 'pre-wrap', fontSize: '1.03rem' },
+    updateTitle: { 
+      fontSize: isMobile ? '1rem' : '1.125rem', 
+      color: '#0f172a', 
+      margin: '0 0 0.5rem 0' 
+    },
+    updateBody: { 
+      color: '#334155', 
+      lineHeight: '1.6', 
+      marginBottom: '1rem', 
+      whiteSpace: 'pre-wrap', 
+      fontSize: isMobile ? '0.95rem' : '1.03rem' 
+    },
 
-    // Make image grid produce equal-size thumbnails regardless of source
-    mediaGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '1rem' },
-    mediaItemWrap: { width: '100%', height: '160px', overflow: 'hidden', borderRadius: '8px' },
-    mediaItem: { width: '100%', height: '100%', objectFit: 'cover', display: 'block', cursor: 'pointer', transition: 'transform 0.2s' },
-    videoPlayer: { width: '100%', borderRadius: '8px', maxHeight: '400px' },
+    // Responsive media grid
+    mediaGrid: { 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? 'repeat(auto-fit, minmax(140px, 1fr))' : 'repeat(auto-fit, minmax(180px, 1fr))', 
+      gap: isMobile ? '8px' : '12px', 
+      marginBottom: '1rem' 
+    },
+    mediaItemWrap: { 
+      width: '100%', 
+      height: isMobile ? '120px' : '160px', 
+      overflow: 'hidden', 
+      borderRadius: '8px' 
+    },
+    mediaItem: { 
+      width: '100%', 
+      height: '100%', 
+      objectFit: 'cover', 
+      display: 'block', 
+      cursor: 'pointer', 
+      transition: 'transform 0.2s' 
+    },
+    videoPlayer: { 
+      width: '100%', 
+      borderRadius: '8px', 
+      maxHeight: '400px' 
+    },
 
-    actions: { display: 'flex', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid #eef2ff' },
-    likeBtn: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 0.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', border: '1px solid transparent' },
-    likedOutline: { background: PRIMARY, color: 'white', borderColor: PRIMARY },
-    unlikedOutline: { background: 'transparent', color: PRIMARY, borderColor: PRIMARY },
-    commentToggle: { display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 0.85rem', borderRadius: '10px', fontWeight: 700, cursor: 'pointer', border: '1px solid transparent', color: PRIMARY },
+    actions: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '0.5rem' : '1rem', 
+      paddingTop: '1rem', 
+      borderTop: '1px solid #eef2ff' 
+    },
+    likeBtn: { 
+      display: 'inline-flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      gap: '0.5rem', 
+      padding: isMobile ? '0.4rem 0.75rem' : '0.45rem 0.85rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer', 
+      border: '1px solid transparent',
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
+      width: isMobile ? '100%' : 'auto'
+    },
+    likedOutline: { 
+      background: PRIMARY, 
+      color: 'white', 
+      borderColor: PRIMARY 
+    },
+    unlikedOutline: { 
+      background: 'transparent', 
+      color: PRIMARY, 
+      borderColor: PRIMARY 
+    },
+    commentToggle: { 
+      display: 'inline-flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      gap: '0.5rem', 
+      padding: isMobile ? '0.4rem 0.75rem' : '0.45rem 0.85rem', 
+      borderRadius: '10px', 
+      fontWeight: 700, 
+      cursor: 'pointer', 
+      border: '1px solid transparent', 
+      color: PRIMARY,
+      fontSize: isMobile ? '0.85rem' : '0.9rem',
+      width: isMobile ? '100%' : 'auto'
+    },
 
-    commentSection: { marginTop: '1rem' },
-    commentInput: { width: '100%', padding: '0.85rem', border: '1px solid #eef2ff', borderRadius: '8px', fontSize: '1rem', resize: 'vertical', marginBottom: '0.75rem' },
-    commentBtn: { backgroundColor: PRIMARY, color: 'white', border: 'none', padding: '0.6rem 1rem', borderRadius: '10px', fontWeight: 800, cursor: 'pointer' },
+    commentSection: { 
+      marginTop: isMobile ? '0.75rem' : '1rem' 
+    },
+    commentInput: { 
+      width: '100%', 
+      padding: isMobile ? '0.6rem' : '0.85rem', 
+      border: '1px solid #eef2ff', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.9rem' : '1rem', 
+      resize: 'vertical', 
+      marginBottom: isMobile ? '0.5rem' : '0.75rem',
+      minHeight: '80px'
+    },
+    commentBtn: { 
+      backgroundColor: PRIMARY, 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.5rem 0.85rem' : '0.6rem 1rem', 
+      borderRadius: '10px', 
+      fontWeight: 800, 
+      cursor: 'pointer',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      width: isMobile ? '100%' : 'auto'
+    },
 
-    commentsList: { marginTop: '1rem' },
-    comment: { display: 'flex', gap: '1rem', padding: '0.8rem', backgroundColor: '#f8fafc', borderRadius: '8px', marginBottom: '0.75rem' },
-    commentAvatar: { width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.85rem' },
-    commentContent: { flex: 1 },
-    commentHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' },
-    commentAuthor: { fontWeight: 700, color: '#0f172a' },
-    commentDate: { color: '#64748b', fontSize: '0.85rem' },
-    commentText: { color: '#334155', lineHeight: 1.5, whiteSpace: 'pre-wrap' },
-    commentDelete: { background: 'none', border: 'none', color: DANGER, cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700 }
+    commentsList: { 
+      marginTop: isMobile ? '0.75rem' : '1rem' 
+    },
+    comment: { 
+      display: 'flex', 
+      gap: isMobile ? '0.75rem' : '1rem', 
+      padding: isMobile ? '0.6rem' : '0.8rem', 
+      backgroundColor: '#f8fafc', 
+      borderRadius: '8px', 
+      marginBottom: isMobile ? '0.5rem' : '0.75rem' 
+    },
+    commentAvatar: { 
+      width: isMobile ? '32px' : '36px', 
+      height: isMobile ? '32px' : '36px', 
+      borderRadius: '50%', 
+      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+      color: 'white', 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      fontWeight: 600, 
+      fontSize: isMobile ? '0.75rem' : '0.85rem' 
+    },
+    commentContent: { 
+      flex: 1 
+    },
+    commentHeader: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: isMobile ? 'flex-start' : 'center', 
+      marginBottom: isMobile ? '0.25rem' : '0.5rem',
+      gap: isMobile ? '0.25rem' : '0'
+    },
+    commentAuthor: { 
+      fontWeight: 700, 
+      color: '#0f172a',
+      fontSize: isMobile ? '0.85rem' : '0.9rem'
+    },
+    commentDate: { 
+      color: '#64748b', 
+      fontSize: isMobile ? '0.75rem' : '0.85rem' 
+    },
+    commentText: { 
+      color: '#334155', 
+      lineHeight: 1.5, 
+      whiteSpace: 'pre-wrap',
+      fontSize: isMobile ? '0.85rem' : '0.9rem'
+    },
+    commentDelete: { 
+      background: 'none', 
+      border: 'none', 
+      color: DANGER, 
+      cursor: 'pointer', 
+      fontSize: isMobile ? '0.8rem' : '0.9rem', 
+      fontWeight: 700,
+      marginTop: isMobile ? '0.25rem' : '0'
+    }
   };
 
   if (loading) return <div style={styles.page}><div style={styles.loading}>Loading daily updates...</div></div>;
@@ -215,44 +529,85 @@ const Home = () => {
   return (
     <div style={styles.page}>
       <div style={styles.header}>
-        <div>
+        <div style={styles.headerText}>
           <h1 style={styles.title}>Daily Mission Updates</h1>
           <p style={styles.subtitle}>Latest news and activities from the mission field</p>
         </div>
 
         {(typeof canManagePosts === 'function' ? canManagePosts() : canManagePosts) && (
-          <button style={styles.addBtn} onClick={() => setShowForm(true)} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}>+ Add Update</button>
+          <button 
+            style={styles.addBtn} 
+            onClick={() => setShowForm(true)}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}
+          >
+            + Add Update
+          </button>
         )}
       </div>
 
       {showForm && (
-        <div style={styles.formOverlay}>
-          <div style={styles.formContainer}>
+        <div style={styles.formOverlay} onClick={() => setShowForm(false)}>
+          <div style={styles.formContainer} onClick={(e) => e.stopPropagation()}>
             <h2 style={styles.formTitle}>New Daily Update</h2>
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.field}>
                 <label style={styles.label}>Title (Optional)</label>
-                <input type="text" value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} placeholder="Enter update title" style={styles.input} />
+                <input 
+                  type="text" 
+                  value={formData.title} 
+                  onChange={(e) => setFormData({...formData, title: e.target.value})} 
+                  placeholder="Enter update title" 
+                  style={styles.input} 
+                />
               </div>
 
               <div style={styles.field}>
                 <label style={styles.label}>Content *</label>
-                <textarea value={formData.body} onChange={(e) => setFormData({...formData, body: e.target.value})} placeholder="Share what's happening in the mission field..." style={styles.textarea} required rows="6" />
+                <textarea 
+                  value={formData.body} 
+                  onChange={(e) => setFormData({...formData, body: e.target.value})} 
+                  placeholder="Share what's happening in the mission field..." 
+                  style={styles.textarea} 
+                  required 
+                  rows={isMobile ? "4" : "6"} 
+                />
               </div>
 
               <div style={styles.field}>
-                <label style={styles.label}>Attachments (Optional)
-                  <span style={{fontSize: '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>Images, Videos (max 350MB), Audio, PDFs</span>
+                <label style={styles.label}>
+                  Attachments (Optional)
+                  <span style={{fontSize: isMobile ? '0.7rem' : '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
+                    Images, Videos (max 350MB), Audio, PDFs
+                  </span>
                 </label>
-                <input type="file" multiple accept="image/*,video/*,audio/*,.pdf" onChange={handleFileSelect} style={{...styles.input, padding: '0.5rem'}} disabled={uploading} />
+                <input 
+                  type="file" 
+                  multiple 
+                  accept="image/*,video/*,audio/*,.pdf" 
+                  onChange={handleFileSelect} 
+                  style={{...styles.input, padding: isMobile ? '0.4rem' : '0.5rem'}} 
+                  disabled={uploading} 
+                />
 
                 {selectedFiles.length > 0 && (
                   <div style={fileUploadStyles.fileList}>
-                    <p style={{fontSize: '0.9rem', marginBottom: '0.5rem', color: '#374151'}}>Selected files ({selectedFiles.length}):</p>
+                    <p style={{fontSize: isMobile ? '0.8rem' : '0.9rem', marginBottom: '0.5rem', color: '#374151'}}>
+                      Selected files ({selectedFiles.length}):
+                    </p>
                     {selectedFiles.map((file, index) => (
                       <div key={index} style={fileUploadStyles.fileItem}>
-                        <span style={fileUploadStyles.fileName}>{file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)</span>
-                        <button type="button" style={fileUploadStyles.removeFile} onClick={() => removeFile(index)} disabled={uploading}>×</button>
+                        <span style={fileUploadStyles.fileName}>
+                          {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                        </span>
+                        <button 
+                          type="button" 
+                          style={fileUploadStyles.removeFile} 
+                          onClick={() => removeFile(index)} 
+                          disabled={uploading}
+                        >
+                          ×
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -260,20 +615,49 @@ const Home = () => {
               </div>
 
               <div style={styles.checkbox}>
-                <input type="checkbox" checked={formData.allowComments} onChange={(e) => setFormData({...formData, allowComments: e.target.checked})} disabled={uploading} />
-                <label>Allow comments</label>
+                <input 
+                  type="checkbox" 
+                  checked={formData.allowComments} 
+                  onChange={(e) => setFormData({...formData, allowComments: e.target.checked})} 
+                  disabled={uploading} 
+                />
+                <label style={{fontSize: isMobile ? '0.9rem' : '1rem'}}>Allow comments</label>
               </div>
 
               <div style={styles.checkbox}>
-                <input type="checkbox" checked={formData.allowLikes} onChange={(e) => setFormData({...formData, allowLikes: e.target.checked})} disabled={uploading} />
-                <label>Allow likes</label>
+                <input 
+                  type="checkbox" 
+                  checked={formData.allowLikes} 
+                  onChange={(e) => setFormData({...formData, allowLikes: e.target.checked})} 
+                  disabled={uploading} 
+                />
+                <label style={{fontSize: isMobile ? '0.9rem' : '1rem'}}>Allow likes</label>
               </div>
 
-              {uploading && (<div style={fileUploadStyles.uploadProgress}><p>Uploading files... Please wait.</p></div>)}
+              {uploading && (
+                <div style={fileUploadStyles.uploadProgress}>
+                  <p>Uploading files... Please wait.</p>
+                </div>
+              )}
 
               <div style={styles.formActions}>
-                <button type="button" style={styles.cancelBtn} onClick={() => setShowForm(false)} disabled={uploading}>Cancel</button>
-                <button type="submit" style={styles.submitBtn} disabled={uploading || !formData.body?.trim()} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}>{uploading ? 'Creating...' : 'Create Update'}</button>
+                <button 
+                  type="button" 
+                  style={styles.cancelBtn} 
+                  onClick={() => setShowForm(false)} 
+                  disabled={uploading}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  style={styles.submitBtn} 
+                  disabled={uploading || !formData.body?.trim()} 
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}
+                >
+                  {uploading ? 'Creating...' : 'Create Update'}
+                </button>
               </div>
             </form>
           </div>
@@ -281,18 +665,43 @@ const Home = () => {
       )}
 
       {updates.length === 0 ? (
-        <div style={styles.empty}><p>No updates yet. Check back later for mission news.</p></div>
+        <div style={styles.empty}>
+          <p>No updates yet. Check back later for mission news.</p>
+          {(typeof canManagePosts === 'function' ? canManagePosts() : canManagePosts) && (
+            <button 
+              style={{...styles.addBtn, marginTop: '1rem'}} 
+              onClick={() => setShowForm(true)}
+            >
+              + Create First Update
+            </button>
+          )}
+        </div>
       ) : (
         updates.map(update => (
           <div key={update.id} style={styles.updateCard}>
             <div style={styles.updateHeader}>
               <div style={styles.authorInfo}>
-                <div style={styles.avatar}>{update.author.firstName?.[0]}{update.author.lastName?.[0]}</div>
-                <div style={styles.authorDetails}><div style={styles.authorName}>{update.author.firstName} {update.author.lastName}</div><div style={styles.postDate}>{new Date(update.createdAt).toLocaleString()}</div></div>
+                <div style={styles.avatar}>
+                  {update.author.firstName?.[0]}{update.author.lastName?.[0]}
+                </div>
+                <div style={styles.authorDetails}>
+                  <div style={styles.authorName}>
+                    {update.author.firstName} {update.author.lastName}
+                  </div>
+                  <div style={styles.postDate}>
+                    {new Date(update.createdAt).toLocaleString()}
+                  </div>
+                </div>
               </div>
 
               {(update.author.id === user?.id || user?.role === 'admin') && (
-                <button style={styles.deleteBtn} onClick={() => handleDeletePost(update.id)} title="Delete post">🗑️</button>
+                <button 
+                  style={styles.deleteBtn} 
+                  onClick={() => handleDeletePost(update.id)} 
+                  title="Delete post"
+                >
+                  🗑️
+                </button>
               )}
             </div>
 
@@ -305,9 +714,19 @@ const Home = () => {
                 {update.attachments.map((attachment, index) => (
                   <div key={index} style={styles.mediaItemWrap}>
                     {attachment.includes('.mp4') || attachment.includes('video') ? (
-                      <video controls style={styles.videoPlayer}><source src={attachment} type="video/mp4" />Your browser does not support the video tag.</video>
+                      <video controls style={styles.videoPlayer}>
+                        <source src={attachment} type="video/mp4" />
+                        Your browser does not support the video tag.
+                      </video>
                     ) : (
-                      <img src={attachment} alt={`Attachment ${index + 1}`} style={styles.mediaItem} onClick={() => window.open(attachment, '_blank')} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} />
+                      <img 
+                        src={attachment} 
+                        alt={`Attachment ${index + 1}`} 
+                        style={styles.mediaItem} 
+                        onClick={() => window.open(attachment, '_blank')}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      />
                     )}
                   </div>
                 ))}
@@ -316,28 +735,88 @@ const Home = () => {
 
             <div style={styles.actions}>
               {update.allowLikes && (
-                <button style={{ ...styles.likeBtn, ...(update.liked ? styles.likedOutline : styles.unlikedOutline) }} onClick={() => handleLike(update.id)} onMouseEnter={(e) => { if (!update.liked) { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; } }} onMouseLeave={(e) => { if (!update.liked) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; } }}>{update.liked ? '❤️' : '🤍'} {update.likes.length}</button>
+                <button 
+                  style={{ ...styles.likeBtn, ...(update.liked ? styles.likedOutline : styles.unlikedOutline) }} 
+                  onClick={() => handleLike(update.id)}
+                  onMouseEnter={(e) => { 
+                    if (!update.liked) { 
+                      e.currentTarget.style.backgroundColor = PRIMARY_HOVER; 
+                      e.currentTarget.style.color = 'white'; 
+                    } 
+                  }} 
+                  onMouseLeave={(e) => { 
+                    if (!update.liked) { 
+                      e.currentTarget.style.backgroundColor = 'transparent'; 
+                      e.currentTarget.style.color = PRIMARY; 
+                    } 
+                  }}
+                >
+                  {update.liked ? '❤️' : '🤍'} {update.likes.length}
+                </button>
               )}
 
               {update.allowComments && (
-                <button style={{ ...styles.commentToggle }} onClick={() => toggleComments(update.id)} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; }}>💬 {update.comments.length} Comments</button>
+                <button 
+                  style={{ ...styles.commentToggle }} 
+                  onClick={() => toggleComments(update.id)}
+                  onMouseEnter={(e) => { 
+                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER; 
+                    e.currentTarget.style.color = 'white'; 
+                  }} 
+                  onMouseLeave={(e) => { 
+                    e.currentTarget.style.backgroundColor = 'transparent'; 
+                    e.currentTarget.style.color = PRIMARY; 
+                  }}
+                >
+                  💬 {update.comments.length} Comments
+                </button>
               )}
             </div>
 
             {expandedComments[update.id] && update.allowComments && (
               <div style={styles.commentSection}>
-                <textarea placeholder="Write a comment..." value={commentInputs[update.id] || ''} onChange={(e) => setCommentInputs(prev => ({ ...prev, [update.id]: e.target.value }))} rows="3" style={styles.commentInput} />
-                <button style={styles.commentBtn} onClick={() => handleCommentSubmit(update.id)} disabled={!commentInputs[update.id]?.trim()} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}>Post Comment</button>
+                <textarea 
+                  placeholder="Write a comment..." 
+                  value={commentInputs[update.id] || ''} 
+                  onChange={(e) => setCommentInputs(prev => ({ ...prev, [update.id]: e.target.value }))} 
+                  rows="3" 
+                  style={styles.commentInput} 
+                />
+                <button 
+                  style={styles.commentBtn} 
+                  onClick={() => handleCommentSubmit(update.id)} 
+                  disabled={!commentInputs[update.id]?.trim()}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}
+                >
+                  Post Comment
+                </button>
 
                 {update.comments.length > 0 && (
                   <div style={styles.commentsList}>
                     {update.comments.map(comment => (
                       <div key={comment.id} style={styles.comment}>
-                        <div style={styles.commentAvatar}>{comment.author.firstName?.[0]}{comment.author.lastName?.[0]}</div>
+                        <div style={styles.commentAvatar}>
+                          {comment.author.firstName?.[0]}{comment.author.lastName?.[0]}
+                        </div>
                         <div style={styles.commentContent}>
-                          <div style={styles.commentHeader}><span style={styles.commentAuthor}>{comment.author.firstName} {comment.author.lastName}</span><span style={styles.commentDate}>{new Date(comment.createdAt).toLocaleString()}</span></div>
+                          <div style={styles.commentHeader}>
+                            <span style={styles.commentAuthor}>
+                              {comment.author.firstName} {comment.author.lastName}
+                            </span>
+                            <span style={styles.commentDate}>
+                              {new Date(comment.createdAt).toLocaleString()}
+                            </span>
+                          </div>
                           <p style={styles.commentText}>{comment.text}</p>
-                          {(comment.author.id === user?.id || user?.role === 'admin') && (<button style={styles.commentDelete} onClick={() => handleDeleteComment(comment.id)}>Delete</button>)}
+                          {(comment.author.id === user?.id || user?.role === 'admin') && (
+                            <button 
+                              style={styles.commentDelete} 
+                              onClick={() => handleDeleteComment(comment.id)}
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}

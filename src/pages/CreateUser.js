@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usersAPI } from '../services/api';
 
 const CreateUser = () => {
@@ -9,6 +9,14 @@ const CreateUser = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(null);
   const [showCredentials, setShowCredentials] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIfMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,7 +44,6 @@ const CreateUser = () => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
-      // You could show a toast notification here
       alert('Copied to clipboard!');
     });
   };
@@ -46,30 +53,186 @@ const CreateUser = () => {
   };
 
   const styles = {
-    page: { maxWidth: '800px', margin: '0 auto', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-    header: { marginBottom: '2rem' },
-    title: { fontSize: '2rem', color: '#2d3748', marginBottom: '0.5rem' },
-    subtitle: { color: '#718096', fontSize: '1.1rem' },
-    container: { background: 'white', borderRadius: '12px', padding: '2.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
-    form: { display: 'flex', flexDirection: 'column', gap: '1.5rem' },
-    alert: { padding: '1.25rem', borderRadius: '8px', border: '1px solid' },
+    page: { 
+      maxWidth: '800px', 
+      margin: '0 auto', 
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      padding: isMobile ? '1rem' : '0',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      minHeight: '100vh'
+    },
+    header: { 
+      marginBottom: isMobile ? '1.5rem' : '2rem',
+      textAlign: 'center',
+      width: '100%'
+    },
+    title: { 
+      fontSize: isMobile ? '1.5rem' : '2rem', 
+      color: '#2d3748', 
+      marginBottom: '0.5rem',
+      textAlign: 'center'
+    },
+    subtitle: { 
+      color: '#718096', 
+      fontSize: isMobile ? '0.9rem' : '1.1rem',
+      textAlign: 'center'
+    },
+    container: { 
+      background: 'white', 
+      borderRadius: '12px', 
+      padding: isMobile ? '1.5rem' : '2.5rem', 
+      boxShadow: isMobile ? '0 1px 4px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.1)',
+      width: '100%'
+    },
+    form: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: isMobile ? '1rem' : '1.5rem'
+    },
+    alert: { 
+      padding: isMobile ? '0.75rem' : '1.25rem', 
+      borderRadius: '8px', 
+      border: '1px solid',
+      textAlign: isMobile ? 'center' : 'left'
+    },
     alertError: { backgroundColor: '#fff5f5', color: '#c53030', borderColor: '#feb2b2' },
     alertSuccess: { backgroundColor: '#f0fff4', color: '#22543d', borderColor: '#9ae6b4' },
-    formRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' },
-    field: { display: 'flex', flexDirection: 'column', gap: '0.5rem' },
-    label: { color: '#2d3748', fontWeight: '600', fontSize: '0.95rem' },
-    input: { padding: '0.75rem 1rem', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' },
-    select: { padding: '0.75rem 1rem', border: '2px solid #e2e8f0', borderRadius: '8px', fontSize: '1rem' },
-    hint: { color: '#718096', fontSize: '0.85rem', margin: 0 },
-    infoBox: { backgroundColor: '#ebf8ff', borderLeft: '4px solid #4299e1', padding: '1.25rem', borderRadius: '6px', color: '#2c5282' },
-    actions: { paddingTop: '1rem', borderTop: '1px solid #e2e8f0' },
-    btnCreate: { width: '100%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', padding: '1rem 2rem', borderRadius: '8px', fontSize: '1.05rem', fontWeight: '600', cursor: 'pointer' },
-    credentialsBox: { backgroundColor: '#f7fafc', border: '2px dashed #cbd5e0', borderRadius: '8px', padding: '1.5rem', marginTop: '1rem' },
-    credentialItem: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', backgroundColor: 'white', borderRadius: '6px', marginBottom: '0.5rem', border: '1px solid #e2e8f0' },
-    credentialLabel: { fontWeight: '600', color: '#2d3748', minWidth: '140px' },
-    credentialValue: { flex: 1, fontFamily: 'monospace', fontSize: '0.9rem', color: '#4a5568', wordBreak: 'break-all' },
-    copyBtn: { backgroundColor: '#4299e1', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', marginLeft: '1rem', fontSize: '0.85rem' },
-    sectionTitle: { fontSize: '1.25rem', fontWeight: '600', color: '#2d3748', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }
+    formRow: { 
+      display: 'grid', 
+      gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', 
+      gap: isMobile ? '0.75rem' : '1rem' 
+    },
+    field: { 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: isMobile ? '0.25rem' : '0.5rem',
+      alignItems: isMobile ? 'center' : 'flex-start'
+    },
+    label: { 
+      color: '#2d3748', 
+      fontWeight: '600', 
+      fontSize: isMobile ? '0.85rem' : '0.95rem',
+      textAlign: isMobile ? 'center' : 'left',
+      width: isMobile ? '100%' : 'auto'
+    },
+    input: { 
+      padding: isMobile ? '0.65rem 0.85rem' : '0.75rem 1rem', 
+      border: isMobile ? '1px solid #e2e8f0' : '2px solid #e2e8f0', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.95rem' : '1rem',
+      width: '100%',
+      maxWidth: '100%',
+      boxSizing: 'border-box'
+    },
+    select: { 
+      padding: isMobile ? '0.65rem 0.85rem' : '0.75rem 1rem', 
+      border: isMobile ? '1px solid #e2e8f0' : '2px solid #e2e8f0', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.95rem' : '1rem',
+      width: '100%'
+    },
+    hint: { 
+      color: '#718096', 
+      fontSize: isMobile ? '0.75rem' : '0.85rem', 
+      margin: 0,
+      textAlign: isMobile ? 'center' : 'left'
+    },
+    infoBox: { 
+      backgroundColor: '#ebf8ff', 
+      borderLeft: isMobile ? '3px solid #4299e1' : '4px solid #4299e1', 
+      padding: isMobile ? '0.75rem' : '1.25rem', 
+      borderRadius: '6px', 
+      color: '#2c5282',
+      textAlign: isMobile ? 'center' : 'left'
+    },
+    actions: { 
+      paddingTop: '1rem', 
+      borderTop: '1px solid #e2e8f0',
+      display: 'flex',
+      justifyContent: 'center'
+    },
+    btnCreate: { 
+      width: isMobile ? '100%' : '100%', 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.85rem 1.5rem' : '1rem 2rem', 
+      borderRadius: '8px', 
+      fontSize: isMobile ? '0.95rem' : '1.05rem', 
+      fontWeight: '600', 
+      cursor: 'pointer',
+      maxWidth: isMobile ? '100%' : '100%'
+    },
+    credentialsBox: { 
+      backgroundColor: '#f7fafc', 
+      border: isMobile ? '1px dashed #cbd5e0' : '2px dashed #cbd5e0', 
+      borderRadius: '8px', 
+      padding: isMobile ? '1rem' : '1.5rem', 
+      marginTop: '1rem' 
+    },
+    credentialItem: { 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      justifyContent: 'space-between', 
+      alignItems: isMobile ? 'center' : 'center', 
+      padding: isMobile ? '0.5rem' : '0.75rem', 
+      backgroundColor: 'white', 
+      borderRadius: '6px', 
+      marginBottom: '0.5rem', 
+      border: '1px solid #e2e8f0',
+      gap: isMobile ? '0.5rem' : '0'
+    },
+    credentialLabel: { 
+      fontWeight: '600', 
+      color: '#2d3748', 
+      minWidth: isMobile ? '100%' : '140px',
+      textAlign: isMobile ? 'center' : 'left',
+      fontSize: isMobile ? '0.8rem' : '0.9rem'
+    },
+    credentialValue: { 
+      flex: 1, 
+      fontFamily: 'monospace', 
+      fontSize: isMobile ? '0.75rem' : '0.9rem', 
+      color: '#4a5568', 
+      wordBreak: 'break-all',
+      textAlign: isMobile ? 'center' : 'left',
+      padding: isMobile ? '0.25rem 0' : '0'
+    },
+    copyBtn: { 
+      backgroundColor: '#4299e1', 
+      color: 'white', 
+      border: 'none', 
+      padding: isMobile ? '0.4rem 0.75rem' : '0.5rem 1rem', 
+      borderRadius: '4px', 
+      cursor: 'pointer', 
+      marginLeft: isMobile ? '0' : '1rem', 
+      fontSize: isMobile ? '0.75rem' : '0.85rem',
+      width: isMobile ? '100%' : 'auto',
+      marginTop: isMobile ? '0.25rem' : '0'
+    },
+    sectionTitle: { 
+      fontSize: isMobile ? '1rem' : '1.25rem', 
+      fontWeight: '600', 
+      color: '#2d3748', 
+      marginBottom: '1rem', 
+      display: 'flex', 
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: 'center', 
+      gap: '0.5rem',
+      textAlign: 'center'
+    },
+    infoList: {
+      margin: 0, 
+      paddingLeft: isMobile ? '1rem' : '1.5rem',
+      textAlign: isMobile ? 'left' : 'left'
+    },
+    infoListItem: {
+      margin: '0.5rem 0', 
+      lineHeight: '1.5',
+      fontSize: isMobile ? '0.85rem' : '1rem'
+    }
   };
 
   return (
@@ -85,17 +248,19 @@ const CreateUser = () => {
 
           {success && (
             <div style={{...styles.alert, ...styles.alertSuccess}}>
-              <strong style={{display: 'block', marginBottom: '0.5rem', fontSize: '1.1rem'}}>✓ User Created Successfully!</strong>
-              <p style={{margin: '0.5rem 0'}}>{success.message}</p>
-              <p style={{margin: '0.5rem 0', fontStyle: 'italic'}}>
+              <strong style={{display: 'block', marginBottom: '0.5rem', fontSize: isMobile ? '1rem' : '1.1rem', textAlign: 'center'}}>
+                ✓ User Created Successfully!
+              </strong>
+              <p style={{margin: '0.5rem 0', textAlign: 'center'}}>{success.message}</p>
+              <p style={{margin: '0.5rem 0', fontStyle: 'italic', textAlign: 'center'}}>
                 <strong>Email Status:</strong> {success.emailStatus}
               </p>
               
               {showCredentials && (
                 <div style={styles.credentialsBox}>
                   <h3 style={styles.sectionTitle}>
-                    📋 User Credentials 
-                    <span style={{fontSize: '0.9rem', fontWeight: 'normal', color: '#718096'}}>
+                    <span>📋 User Credentials</span>
+                    <span style={{fontSize: isMobile ? '0.75rem' : '0.9rem', fontWeight: 'normal', color: '#718096'}}>
                       (Copy and send to user if email failed)
                     </span>
                   </h3>
@@ -108,7 +273,7 @@ const CreateUser = () => {
                       style={styles.copyBtn}
                       onClick={() => copyToClipboard(success.user.email)}
                     >
-                      Copy
+                      Copy Email
                     </button>
                   </div>
 
@@ -120,7 +285,7 @@ const CreateUser = () => {
                       style={styles.copyBtn}
                       onClick={() => copyToClipboard(success.credentials.temporaryPassword)}
                     >
-                      Copy
+                      Copy Password
                     </button>
                   </div>
 
@@ -132,7 +297,7 @@ const CreateUser = () => {
                       style={styles.copyBtn}
                       onClick={() => copyToClipboard(success.credentials.loginToken)}
                     >
-                      Copy
+                      Copy Token
                     </button>
                   </div>
 
@@ -144,7 +309,7 @@ const CreateUser = () => {
                       style={styles.copyBtn}
                       onClick={() => copyToClipboard(success.credentials.autoLoginUrl)}
                     >
-                      Copy
+                      Copy URL
                     </button>
                   </div>
 
@@ -155,9 +320,9 @@ const CreateUser = () => {
                     </span>
                   </div>
 
-                  <div style={{marginTop: '1rem', padding: '1rem', backgroundColor: '#fff5f5', borderRadius: '6px', border: '1px solid #fed7d7'}}>
+                  <div style={{marginTop: '1rem', padding: isMobile ? '0.75rem' : '1rem', backgroundColor: '#fff5f5', borderRadius: '6px', border: '1px solid #fed7d7', textAlign: 'center'}}>
                     <strong style={{color: '#c53030'}}>⚠️ Important:</strong>
-                    <p style={{margin: '0.5rem 0 0 0', fontSize: '0.9rem', color: '#744210'}}>
+                    <p style={{margin: '0.5rem 0 0 0', fontSize: isMobile ? '0.8rem' : '0.9rem', color: '#744210'}}>
                       {success.instructions} The auto-login token is valid for 24 hours. 
                       User should change their password after first login.
                     </p>
@@ -170,22 +335,56 @@ const CreateUser = () => {
           <div style={styles.formRow}>
             <div style={styles.field}>
               <label htmlFor="firstName" style={styles.label}>First Name *</label>
-              <input id="firstName" name="firstName" type="text" value={formData.firstName} onChange={handleChange} placeholder="Enter first name" required style={styles.input} />
+              <input 
+                id="firstName" 
+                name="firstName" 
+                type="text" 
+                value={formData.firstName} 
+                onChange={handleChange} 
+                placeholder="Enter first name" 
+                required 
+                style={styles.input} 
+              />
             </div>
             <div style={styles.field}>
               <label htmlFor="lastName" style={styles.label}>Last Name *</label>
-              <input id="lastName" name="lastName" type="text" value={formData.lastName} onChange={handleChange} placeholder="Enter last name" required style={styles.input} />
+              <input 
+                id="lastName" 
+                name="lastName" 
+                type="text" 
+                value={formData.lastName} 
+                onChange={handleChange} 
+                placeholder="Enter last name" 
+                required 
+                style={styles.input} 
+              />
             </div>
           </div>
 
           <div style={styles.field}>
             <label htmlFor="email" style={styles.label}>Email Address *</label>
-            <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} placeholder="user@example.com" required style={styles.input} />
+            <input 
+              id="email" 
+              name="email" 
+              type="email" 
+              value={formData.email} 
+              onChange={handleChange} 
+              placeholder="user@example.com" 
+              required 
+              style={styles.input} 
+            />
           </div>
 
           <div style={styles.field}>
             <label htmlFor="role" style={styles.label}>Role *</label>
-            <select id="role" name="role" value={formData.role} onChange={handleChange} required style={styles.select}>
+            <select 
+              id="role" 
+              name="role" 
+              value={formData.role} 
+              onChange={handleChange} 
+              required 
+              style={styles.select}
+            >
               <option value="student">Student</option>
               <option value="alumni">Alumni</option>
               <option value="missionary">Missionary</option>
@@ -198,22 +397,36 @@ const CreateUser = () => {
 
           <div style={styles.field}>
             <label htmlFor="contactPhone" style={styles.label}>Contact Phone</label>
-            <input id="contactPhone" name="contactPhone" type="tel" value={formData.contactPhone} onChange={handleChange} placeholder="+1 (555) 123-4567" style={styles.input} />
+            <input 
+              id="contactPhone" 
+              name="contactPhone" 
+              type="tel" 
+              value={formData.contactPhone} 
+              onChange={handleChange} 
+              placeholder="+1 (555) 123-4567" 
+              style={styles.input} 
+            />
           </div>
 
           <div style={styles.infoBox}>
-            <strong style={{display: 'block', marginBottom: '0.75rem', color: '#2b6cb0'}}>ℹ️ Important Information:</strong>
-            <ul style={{margin: 0, paddingLeft: '1.5rem'}}>
-              <li style={{margin: '0.5rem 0', lineHeight: '1.5'}}>A temporary password will be automatically generated</li>
-              <li style={{margin: '0.5rem 0', lineHeight: '1.5'}}>The user will receive a welcome email with login credentials</li>
-              <li style={{margin: '0.5rem 0', lineHeight: '1.5'}}>A one-time auto-login link will be included (valid for 24 hours)</li>
-              <li style={{margin: '0.5rem 0', lineHeight: '1.5'}}>Full credentials will be shown for manual sharing if email fails</li>
-              <li style={{margin: '0.5rem 0', lineHeight: '1.5'}}>Users should change their password after first login</li>
+            <strong style={{display: 'block', marginBottom: '0.75rem', color: '#2b6cb0', textAlign: 'center'}}>ℹ️ Important Information:</strong>
+            <ul style={styles.infoList}>
+              <li style={styles.infoListItem}>A temporary password will be automatically generated</li>
+              <li style={styles.infoListItem}>The user will receive a welcome email with login credentials</li>
+              <li style={styles.infoListItem}>A one-time auto-login link will be included (valid for 24 hours)</li>
+              <li style={styles.infoListItem}>Full credentials will be shown for manual sharing if email fails</li>
+              <li style={styles.infoListItem}>Users should change their password after first login</li>
             </ul>
           </div>
 
           <div style={styles.actions}>
-            <button type="submit" disabled={submitting} style={styles.btnCreate}>
+            <button 
+              type="submit" 
+              disabled={submitting} 
+              style={styles.btnCreate}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
               {submitting ? 'Creating User...' : 'Create User'}
             </button>
           </div>

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "06Ws0GhUSz0=",
+  "dgSpecHash": "M8TYRICtzYg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mfundo\\Desktop\\bbm\\Backend\\Backend.csproj",
+  "projectFilePath": "C:\\Users\\Mfundo\\Desktop\\bbm\\backend\\Backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mfundo\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\Mfundo\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\8.0.0\\microsoft.aspnetcore.authentication.jwtbearer.8.0.0.nupkg.sha512",
