@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using Backend.Models;
 using Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,9 +36,9 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.Limits.MaxRequestBodySize = 368435456; // 350MB
 });
 
-// Configure SQLite
+// Configure PostgreSQL via Npgsql (reads "DefaultConnection" from configuration)
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("SqliteConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Configure Identity
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -77,27 +79,37 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey ?? string.Empty))
     };
 });
 
 // Add Authorization
 builder.Services.AddAuthorization();
 
-// Configure CORS
+// Configure CORS - include dev hosts and production domain + SiteUrl from config
+var configuredSiteUrl = builder.Configuration["SiteUrl"];
+var allowedOrigins = new List<string>
+{
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://localhost:3000",
+    "https://localhost:5173",
+    configuredSiteUrl ?? string.Empty,
+    "http://bbm.207-180-201-93.sslip.io",
+    "https://bbm.207-180-201-93.sslip.io"
+}
+.Where(u => !string.IsNullOrWhiteSpace(u))
+.Distinct()
+.ToArray();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy.WithOrigins(
-            "http://localhost:3000",
-            "http://localhost:5173",
-            "https://localhost:3000",
-            "https://localhost:5173"
-        )
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials();
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -158,6 +170,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// If running behind a reverse proxy (nginx), we want forwarded headers enabled.
+// If you need forwarded headers, uncomment and configure:
+// app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
+
 app.UseHttpsRedirection();
 
 // CRITICAL FIX: Configure static files properly
@@ -196,7 +212,7 @@ app.MapControllers();
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    
+
     try
     {
         dbContext.Database.Migrate();

@@ -162,3 +162,5 @@ C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\a7a824e9-79
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\21e07365-2b01-4afb-ac45-2280bd4de961.jpg
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\6e2ce3e1-58a6-40c8-a9b7-5ce4509e15f7.jpg
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\Mfundo\Desktop\bbm\backend\bin\Debug\net8.0\Npgsql.dll
+C:\Users\Mfundo\Desktop\bbm\backend\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
