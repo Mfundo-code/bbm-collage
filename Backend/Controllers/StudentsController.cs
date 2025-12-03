@@ -202,6 +202,7 @@ namespace Backend.Controllers
                 },
                 credentials = new
                 {
+                    email = user.Email!,  // FIXED: Added email to credentials
                     temporaryPassword = password,
                     loginToken = loginToken.Token,
                     autoLoginUrl = autoLoginUrl,
