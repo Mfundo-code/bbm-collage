@@ -1,5 +1,5 @@
 // src/components/DashboardLayout.js
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -11,12 +11,31 @@ const DashboardLayout = () => {
   const [learningDropdown, setLearningDropdown] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  const dropdownRef = useRef(null);
 
   React.useEffect(() => {
     const checkIfMobile = () => setIsMobile(window.innerWidth <= 768);
     checkIfMobile();
     window.addEventListener('resize', checkIfMobile);
     return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setLearningDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -26,29 +45,38 @@ const DashboardLayout = () => {
 
   const isActive = (path) => location.pathname.startsWith(path);
 
-
-const menuItems = [
-  { path: '/dashboard', icon: '🏠', label: 'Home', description: 'Daily mission updates' },
-  { path: '/dashboard/students', icon: '🎓', label: 'Students', description: 'Current students' }, // Add this line
-  { path: '/dashboard/suggestions', icon: '💡', label: 'Suggestions', description: 'Share your ideas' },
-  { path: '/dashboard/announcements', icon: '📢', label: 'Announcements', description: 'Important notices' },
-  { path: '/dashboard/testimonies', icon: '🙏', label: 'Testimonies', description: 'Share experiences' },
-  { path: '/dashboard/sunday-services', icon: '⛪', label: 'Sunday Services', description: 'Worship services' },
-  { path: '/dashboard/missionaries', icon: '🌍', label: 'Missionaries', description: 'Mission work updates' },
-  { path: '/dashboard/alumni', icon: '🎓', label: 'Alumni', description: 'Graduate network' },
-];
-
   const handleNavigation = (path) => {
     navigate(path);
     setLearningDropdown(false);
     setMobileMenuOpen(false);
   };
 
+  // Mobile-specific dropdown toggle
+  const toggleLearningDropdown = () => {
+    if (isMobile) {
+      // On mobile, use a modal-like overlay for better UX
+      setLearningDropdown(!learningDropdown);
+    } else {
+      setLearningDropdown(!learningDropdown);
+    }
+  };
+
+  const menuItems = [
+    { path: '/dashboard', icon: '🏠', label: 'Home', description: 'Daily mission updates' },
+    { path: '/dashboard/students', icon: '🎓', label: 'Students', description: 'Current students' },
+    { path: '/dashboard/suggestions', icon: '💡', label: 'Suggestions', description: 'Share your ideas' },
+    { path: '/dashboard/announcements', icon: '📢', label: 'Announcements', description: 'Important notices' },
+    { path: '/dashboard/testimonies', icon: '🙏', label: 'Testimonies', description: 'Share experiences' },
+    { path: '/dashboard/sunday-services', icon: '⛪', label: 'Sunday Services', description: 'Worship services' },
+    { path: '/dashboard/missionaries', icon: '🌍', label: 'Missionaries', description: 'Mission work updates' },
+    { path: '/dashboard/alumni', icon: '🎓', label: 'Alumni', description: 'Graduate network' },
+  ];
+
   // Unified, subtle palette
   const PALETTE = {
-    bgSidebar: '#0f1724', // deep charcoal
-    bgMain: '#f7faf9', // very light background
-    primary: '#0ea5a4', // teal
+    bgSidebar: '#0f1724',
+    bgMain: '#f7faf9',
+    primary: '#0ea5a4',
     primaryDark: '#0b8a7f',
     mutedText: '#94a3b8',
     card: '#ffffff',
@@ -222,15 +250,19 @@ const menuItems = [
       flexWrap: 'wrap',
       justifyContent: isMobile ? 'center' : 'flex-end',
       alignItems: 'center',
+      position: 'relative',
     },
     buttonContainer: {
       position: 'relative',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
     },
     mainButton: {
       backgroundColor: PALETTE.primary,
       color: 'white',
       border: 'none',
-      padding: isMobile ? '0.5rem 0.75rem' : '0.6rem 1.2rem',
+      padding: isMobile ? '0.6rem 0.9rem' : '0.6rem 1.2rem',
       borderRadius: '10px',
       fontWeight: '700',
       cursor: 'pointer',
@@ -241,12 +273,13 @@ const menuItems = [
       gap: '0.5rem',
       boxShadow: '0 8px 20px rgba(14,165,164,0.08)',
       whiteSpace: 'nowrap',
+      minHeight: '44px', // Minimum touch target size
     },
     mobileIconButton: {
       backgroundColor: PALETTE.primary,
       color: 'white',
       border: 'none',
-      padding: '0.65rem',
+      padding: '0.75rem',
       borderRadius: '10px',
       fontWeight: '700',
       cursor: 'pointer',
@@ -256,33 +289,50 @@ const menuItems = [
       alignItems: 'center',
       justifyContent: 'center',
       boxShadow: '0 8px 20px rgba(14,165,164,0.08)',
-      minWidth: '48px',
-      minHeight: '48px',
+      minWidth: '50px',
+      minHeight: '50px',
     },
+    // Desktop dropdown
     dropdown: {
       position: 'absolute',
       top: '100%',
-      left: 'auto',
-      right: 0,
+      left: isMobile ? '50%' : 'auto',
+      right: isMobile ? 'auto' : 0,
+      transform: isMobile ? 'translateX(-50%)' : 'none',
       backgroundColor: PALETTE.card,
       border: '1px solid rgba(2,6,23,0.06)',
-      borderRadius: '8px',
-      boxShadow: '0 6px 18px rgba(2,6,23,0.06)',
+      borderRadius: '12px',
+      boxShadow: '0 10px 25px rgba(2,6,23,0.1)',
       zIndex: 1000,
-      minWidth: '200px',
+      minWidth: isMobile ? '200px' : '220px',
       marginTop: '0.5rem',
+      display: learningDropdown ? 'block' : 'none',
     },
     dropdownItem: {
       display: 'block',
       width: '100%',
-      padding: '0.75rem 1rem',
+      padding: isMobile ? '0.9rem 1rem' : '0.75rem 1rem',
       border: 'none',
       backgroundColor: 'transparent',
       textAlign: 'left',
       cursor: 'pointer',
-      fontSize: '0.95rem',
+      fontSize: isMobile ? '0.95rem' : '0.9rem',
       color: '#0f1724',
-      transition: 'background-color 0.12s',
+      transition: 'background-color 0.12s, transform 0.1s',
+      borderBottom: '1px solid rgba(2,6,23,0.05)',
+      minHeight: isMobile ? '48px' : 'auto',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+    },
+    dropdownItemLast: {
+      borderBottom: 'none',
+      borderBottomLeftRadius: '12px',
+      borderBottomRightRadius: '12px',
+    },
+    dropdownItemFirst: {
+      borderTopLeftRadius: '12px',
+      borderTopRightRadius: '12px',
     },
     content: {
       flex: 1,
@@ -294,7 +344,7 @@ const menuItems = [
       backgroundColor: PALETTE.primary,
       color: 'white',
       border: 'none',
-      padding: '0.65rem',
+      padding: '0.75rem',
       borderRadius: '10px',
       cursor: 'pointer',
       fontSize: '1.25rem',
@@ -303,8 +353,8 @@ const menuItems = [
       alignItems: 'center',
       justifyContent: 'center',
       boxShadow: '0 8px 20px rgba(14,165,164,0.08)',
-      minWidth: '48px',
-      minHeight: '48px',
+      minWidth: '50px',
+      minHeight: '50px',
     },
     mobileMenuOverlay: {
       position: 'fixed',
@@ -336,8 +386,8 @@ const menuItems = [
       right: '1.5rem',
       fontSize: '1.3rem',
       borderRadius: '10px',
-      width: '48px',
-      height: '48px',
+      width: '50px',
+      height: '50px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -361,6 +411,7 @@ const menuItems = [
       background: 'rgba(255, 255, 255, 0.05)',
       border: '1px solid rgba(255, 255, 255, 0.1)',
       fontSize: '0.95rem',
+      minHeight: '50px',
     },
     mobileMenuIcon: {
       marginRight: '1rem',
@@ -384,12 +435,63 @@ const menuItems = [
       backgroundColor: PALETTE.logout,
       color: 'white',
       border: 'none',
-      padding: '0.75rem',
+      padding: '0.85rem',
       borderRadius: '10px',
       fontWeight: '600',
       cursor: 'pointer',
       transition: 'background-color 0.15s',
       fontSize: '0.9rem',
+      minHeight: '50px',
+    },
+    // Mobile dropdown overlay for better UX
+    mobileDropdownOverlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.3)',
+      zIndex: 999,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    mobileDropdownContent: {
+      backgroundColor: PALETTE.card,
+      borderRadius: '16px',
+      padding: '1.5rem',
+      width: '90%',
+      maxWidth: '400px',
+      boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+    },
+    mobileDropdownItem: {
+      width: '100%',
+      padding: '1rem 1.25rem',
+      marginBottom: '0.75rem',
+      backgroundColor: PALETTE.primary,
+      color: 'white',
+      border: 'none',
+      borderRadius: '12px',
+      fontSize: '1rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'transform 0.1s, background-color 0.15s',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '0.75rem',
+      minHeight: '56px',
+    },
+    mobileDropdownClose: {
+      width: '100%',
+      padding: '1rem',
+      marginTop: '1rem',
+      backgroundColor: 'transparent',
+      color: PALETTE.mutedText,
+      border: '1px solid rgba(2,6,23,0.1)',
+      borderRadius: '12px',
+      fontSize: '1rem',
+      cursor: 'pointer',
     },
   };
 
@@ -555,42 +657,143 @@ const menuItems = [
       <main style={styles.main}>
         {/* Button Bar */}
         <div style={styles.buttonBar}>
-          <div style={styles.buttonContainer}>
+          {/* Learning Dropdown */}
+          <div style={styles.buttonContainer} ref={dropdownRef}>
             <button 
               style={isMobile ? styles.mobileIconButton : styles.mainButton}
-              onClick={() => setLearningDropdown(!learningDropdown)}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+              onClick={toggleLearningDropdown}
+              onMouseEnter={(e) => { 
+                e.currentTarget.style.transform = 'translateY(-1px)'; 
+                e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; 
+              }}
+              onMouseLeave={(e) => { 
+                e.currentTarget.style.transform = 'none'; 
+                e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; 
+              }}
+              onTouchStart={(e) => {
+                e.currentTarget.style.transform = 'scale(0.98)';
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.transform = 'none';
+              }}
             >
               {isMobile ? '📚' : `📚 Learning ${learningDropdown ? '▲' : '▼'}`}
             </button>
-            {learningDropdown && (
+            
+            {/* Desktop dropdown */}
+            {!isMobile && learningDropdown && (
               <div style={styles.dropdown}>
                 <button 
-                  style={styles.dropdownItem}
+                  style={{
+                    ...styles.dropdownItem,
+                    ...styles.dropdownItemFirst
+                  }}
                   onClick={() => handleNavigation('/dashboard/nqf5')}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f6f5'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f3f6f5';
+                    e.target.style.transform = 'translateX(2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.transform = 'none';
+                  }}
                 >
+                  <span>📘</span>
                   NQF 5
                 </button>
                 <button 
-                  style={styles.dropdownItem}
+                  style={{
+                    ...styles.dropdownItem,
+                    ...styles.dropdownItemLast
+                  }}
                   onClick={() => handleNavigation('/dashboard/continues-learning')}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f6f5'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = '#f3f6f5';
+                    e.target.style.transform = 'translateX(2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'transparent';
+                    e.target.style.transform = 'none';
+                  }}
                 >
+                  <span>📚</span>
                   Continues Learning
                 </button>
               </div>
             )}
           </div>
           
+          {/* Mobile dropdown overlay (modal-like) */}
+          {isMobile && learningDropdown && (
+            <div 
+              style={styles.mobileDropdownOverlay}
+              onClick={() => setLearningDropdown(false)}
+            >
+              <div 
+                style={styles.mobileDropdownContent}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#0f1724' }}>
+                  Learning Options
+                </h3>
+                <button 
+                  style={styles.mobileDropdownItem}
+                  onClick={() => handleNavigation('/dashboard/nqf5')}
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.98)';
+                    e.currentTarget.style.backgroundColor = PALETTE.primaryDark;
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.backgroundColor = PALETTE.primary;
+                  }}
+                >
+                  <span>📘</span>
+                  NQF 5
+                </button>
+                <button 
+                  style={styles.mobileDropdownItem}
+                  onClick={() => handleNavigation('/dashboard/continues-learning')}
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.transform = 'scale(0.98)';
+                    e.currentTarget.style.backgroundColor = PALETTE.primaryDark;
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.backgroundColor = PALETTE.primary;
+                  }}
+                >
+                  <span>📚</span>
+                  Continues Learning
+                </button>
+                <button 
+                  style={styles.mobileDropdownClose}
+                  onClick={() => setLearningDropdown(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Other buttons */}
           <button 
             style={isMobile ? styles.mobileIconButton : styles.mainButton}
             onClick={() => handleNavigation('/dashboard/outreaches')}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+            onMouseEnter={(e) => { 
+              e.currentTarget.style.transform = 'translateY(-1px)'; 
+              e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; 
+            }}
+            onMouseLeave={(e) => { 
+              e.currentTarget.style.transform = 'none'; 
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; 
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.transform = 'scale(0.98)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.transform = 'none';
+            }}
           >
             {isMobile ? '🌍' : '🌍 Outreaches'}
           </button>
@@ -598,8 +801,20 @@ const menuItems = [
           <button 
             style={isMobile ? styles.mobileIconButton : styles.mainButton}
             onClick={() => handleNavigation('/dashboard/mentorship')}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+            onMouseEnter={(e) => { 
+              e.currentTarget.style.transform = 'translateY(-1px)'; 
+              e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; 
+            }}
+            onMouseLeave={(e) => { 
+              e.currentTarget.style.transform = 'none'; 
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; 
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.transform = 'scale(0.98)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.transform = 'none';
+            }}
           >
             {isMobile ? '👥' : '👥 Mentorship'}
           </button>
@@ -607,8 +822,20 @@ const menuItems = [
           <button 
             style={isMobile ? styles.mobileIconButton : styles.mainButton}
             onClick={() => handleNavigation('/dashboard/prayer-wall')}
-            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; }}
+            onMouseEnter={(e) => { 
+              e.currentTarget.style.transform = 'translateY(-1px)'; 
+              e.currentTarget.style.boxShadow = '0 10px 24px rgba(14,165,164,0.12)'; 
+            }}
+            onMouseLeave={(e) => { 
+              e.currentTarget.style.transform = 'none'; 
+              e.currentTarget.style.boxShadow = '0 8px 20px rgba(14,165,164,0.08)'; 
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.transform = 'scale(0.98)';
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.transform = 'none';
+            }}
           >
             {isMobile ? '🙏' : '🙏 Prayer Wall'}
           </button>
