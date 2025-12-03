@@ -12,6 +12,10 @@ const Testimonies = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadError, setUploadError] = useState('');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState('');
+  const [lightboxImages, setLightboxImages] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [formData, setFormData] = useState({
     title: '',
     body: '',
@@ -179,10 +183,155 @@ const Testimonies = () => {
     }
   };
 
+  // Lightbox functions
+  const openLightbox = (imageUrl, allImages, index) => {
+    setLightboxImages(allImages);
+    setLightboxImage(imageUrl);
+    setCurrentImageIndex(index);
+    setLightboxOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxImage('');
+    setLightboxImages([]);
+    setCurrentImageIndex(0);
+    document.body.style.overflow = 'auto';
+  };
+
+  const navigateLightbox = (direction) => {
+    let newIndex = currentImageIndex + direction;
+    
+    if (newIndex < 0) {
+      newIndex = lightboxImages.length - 1;
+    } else if (newIndex >= lightboxImages.length) {
+      newIndex = 0;
+    }
+    
+    setCurrentImageIndex(newIndex);
+    setLightboxImage(lightboxImages[newIndex]);
+  };
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxOpen) return;
+      
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowRight') {
+        navigateLightbox(1);
+      } else if (e.key === 'ArrowLeft') {
+        navigateLightbox(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, currentImageIndex, lightboxImages]);
+
+  // Media type checkers
+  const isImage = (url) => url.match(/\.(jpeg|jpg|png|gif|webp|bmp|svg)$/i) || url.includes('image/');
+
+  // Filter only images for lightbox
+  const getImageAttachments = (attachments) => {
+    return attachments.filter(attachment => isImage(attachment));
+  };
+
   // --- Styles: aligned to Missionaries page single primary color and button style ---
   const PRIMARY = '#06b6d4'; // consistent primary color (teal)
   const PRIMARY_HOVER = '#0aa9c3';
   const DANGER = '#ef4444';
+
+  // Lightbox styles
+  const lightboxStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      zIndex: 2000,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    container: {
+      position: 'relative',
+      width: '90%',
+      height: '90%',
+      display: 'flex',
+      flexDirection: 'column'
+    },
+    imageContainer: {
+      flex: 1,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    },
+    image: {
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain'
+    },
+    closeButton: {
+      position: 'absolute',
+      top: isMobile ? '10px' : '20px',
+      right: isMobile ? '10px' : '20px',
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: 'none',
+      color: 'white',
+      fontSize: isMobile ? '1.5rem' : '2rem',
+      cursor: 'pointer',
+      width: isMobile ? '40px' : '50px',
+      height: isMobile ? '40px' : '50px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s'
+    },
+    navButton: {
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: 'none',
+      color: 'white',
+      fontSize: isMobile ? '1.5rem' : '2rem',
+      cursor: 'pointer',
+      width: isMobile ? '40px' : '50px',
+      height: isMobile ? '40px' : '50px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s'
+    },
+    prevButton: {
+      left: isMobile ? '10px' : '20px'
+    },
+    nextButton: {
+      right: isMobile ? '10px' : '20px'
+    },
+    counter: {
+      position: 'absolute',
+      bottom: isMobile ? '60px' : '20px',
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      color: 'white',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      background: 'rgba(0, 0, 0, 0.5)',
+      padding: '5px 10px',
+      borderRadius: '20px',
+      width: 'fit-content',
+      margin: '0 auto'
+    }
+  };
 
   // Styles function that responds to mobile
   const getStyles = (isMobile) => ({
@@ -642,6 +791,63 @@ const Testimonies = () => {
 
   return (
     <div style={styles.page}>
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div style={lightboxStyles.overlay} onClick={closeLightbox}>
+          <div style={lightboxStyles.container} onClick={(e) => e.stopPropagation()}>
+            <div style={lightboxStyles.imageContainer}>
+              <img 
+                src={lightboxImage} 
+                alt="Enlarged view" 
+                style={lightboxStyles.image}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            
+            {lightboxImages.length > 1 && (
+              <>
+                <button 
+                  style={{...lightboxStyles.navButton, ...lightboxStyles.prevButton}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateLightbox(-1);
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                >
+                  ‹
+                </button>
+                
+                <button 
+                  style={{...lightboxStyles.navButton, ...lightboxStyles.nextButton}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateLightbox(1);
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                >
+                  ›
+                </button>
+                
+                <div style={lightboxStyles.counter}>
+                  {currentImageIndex + 1} / {lightboxImages.length}
+                </div>
+              </>
+            )}
+            
+            <button 
+              style={lightboxStyles.closeButton}
+              onClick={closeLightbox}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={styles.header}>
         <h1 style={styles.title}>Testimonies</h1>
         <button
@@ -711,15 +917,15 @@ const Testimonies = () => {
 
               <div style={styles.field}>
                 <label style={styles.label}>
-                  Photos/Videos (Optional)
+                  Photos (Optional)
                   <span style={{fontSize: isMobile ? '0.75rem' : '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
-                    Images, Videos (max 350MB)
+                    Images (max 350MB)
                   </span>
                 </label>
                 <input 
                   type="file" 
                   multiple 
-                  accept="image/*,video/*" 
+                  accept="image/*" 
                   onChange={handleFileSelect} 
                   style={{...styles.input, padding: isMobile ? '0.4rem' : '0.5rem'}} 
                   disabled={uploading} 
@@ -790,143 +996,154 @@ const Testimonies = () => {
           <p>No testimonies yet. Be the first to share your story!</p>
         </div>
       ) : (
-        testimonies.map(testimony => (
-          <div key={testimony.id} style={{...styles.testimonyCard, ...(testimony.featured ? styles.featured : {})}}>
-            <div style={styles.testimonyHeader}>
-              <div style={styles.testimonyInfo}>
-                <h3 style={styles.testimonyTitle}>
-                  {testimony.title}
-                  {testimony.featured && <span style={styles.featuredBadge}>FEATURED</span>}
-                </h3>
-                <div style={styles.testimonyMeta}>
-                  <div style={styles.metaRow}>
-                    <span>By {testimony.author.firstName} {testimony.author.lastName}</span>
-                    <span>{new Date(testimony.createdAt).toLocaleString()}</span>
+        testimonies.map(testimony => {
+          // Filter images for this testimony
+          const imageAttachments = getImageAttachments(testimony.attachments);
+          
+          return (
+            <div key={testimony.id} style={{...styles.testimonyCard, ...(testimony.featured ? styles.featured : {})}}>
+              <div style={styles.testimonyHeader}>
+                <div style={styles.testimonyInfo}>
+                  <h3 style={styles.testimonyTitle}>
+                    {testimony.title}
+                    {testimony.featured && <span style={styles.featuredBadge}>FEATURED</span>}
+                  </h3>
+                  <div style={styles.testimonyMeta}>
+                    <div style={styles.metaRow}>
+                      <span>By {testimony.author.firstName} {testimony.author.lastName}</span>
+                      <span>{new Date(testimony.createdAt).toLocaleString()}</span>
+                    </div>
+                    {testimony.location && <span style={styles.location}>📍 {testimony.location}</span>}
+                    {testimony.outreachTag && <span style={styles.outreachTag}>{testimony.outreachTag}</span>}
                   </div>
-                  {testimony.location && <span style={styles.location}>📍 {testimony.location}</span>}
-                  {testimony.outreachTag && <span style={styles.outreachTag}>{testimony.outreachTag}</span>}
+                </div>
+
+                <div style={styles.headerActions}>
+                  {(testimony.author.id === user?.id || (typeof isAdmin === 'function' ? isAdmin() : isAdmin)) && (
+                    <button 
+                      style={styles.deleteBtn} 
+                      onClick={() => handleDeleteTestimony(testimony.id)} 
+                      title="Delete testimony"
+                    >
+                      🗑️
+                    </button>
+                  )}
+                  {(typeof isAdmin === 'function' ? isAdmin() : isAdmin) && (
+                    <button 
+                      style={styles.featuredBtn} 
+                      onClick={() => handleToggleFeatured(testimony.id)} 
+                      title={testimony.featured ? 'Remove featured' : 'Mark as featured'}
+                    >
+                      {testimony.featured ? '★' : '☆'}
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div style={styles.headerActions}>
-                {(testimony.author.id === user?.id || (typeof isAdmin === 'function' ? isAdmin() : isAdmin)) && (
-                  <button 
-                    style={styles.deleteBtn} 
-                    onClick={() => handleDeleteTestimony(testimony.id)} 
-                    title="Delete testimony"
+              <div style={styles.testimonyBody}>{testimony.body}</div>
+
+              {testimony.attachments && testimony.attachments.length > 0 && (
+                <div style={styles.mediaGrid}>
+                  {testimony.attachments.map((attachment, index) => (
+                    <img 
+                      key={index} 
+                      src={attachment} 
+                      alt={`Testimony attachment ${index + 1}`} 
+                      style={styles.mediaItem} 
+                      onClick={() => {
+                        if (isImage(attachment)) {
+                          openLightbox(attachment, imageAttachments, imageAttachments.indexOf(attachment));
+                        } else {
+                          window.open(attachment, '_blank');
+                        }
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} 
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} 
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div style={styles.actions}>
+                <div style={styles.actionButtons}>
+                  <button
+                    style={{
+                      ...styles.likeBtn,
+                      ...(testimony.liked ? styles.likedOutline : styles.unlikedOutline)
+                    }}
+                    onClick={() => handleLike(testimony.id)}
+                    onMouseEnter={(e) => { if (!testimony.liked) { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; } }}
+                    onMouseLeave={(e) => { if (!testimony.liked) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; } }}
                   >
-                    🗑️
+                    {testimony.liked ? '❤️' : '🤍'} {testimony.likes.length} Likes
                   </button>
-                )}
-                {(typeof isAdmin === 'function' ? isAdmin() : isAdmin) && (
-                  <button 
-                    style={styles.featuredBtn} 
-                    onClick={() => handleToggleFeatured(testimony.id)} 
-                    title={testimony.featured ? 'Remove featured' : 'Mark as featured'}
+
+                  <button
+                    style={{ ...styles.commentToggle, border: '1px solid transparent', background: 'transparent', color: PRIMARY }}
+                    onClick={() => toggleComments(testimony.id)}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; }}
                   >
-                    {testimony.featured ? '★' : '☆'}
+                    💬 {testimony.comments.length} Comments
                   </button>
-                )}
+                </div>
               </div>
-            </div>
 
-            <div style={styles.testimonyBody}>{testimony.body}</div>
-
-            {testimony.attachments && testimony.attachments.length > 0 && (
-              <div style={styles.mediaGrid}>
-                {testimony.attachments.map((attachment, index) => (
-                  <img 
-                    key={index} 
-                    src={attachment} 
-                    alt={`Testimony attachment ${index + 1}`} 
-                    style={styles.mediaItem} 
-                    onClick={() => window.open(attachment, '_blank')} 
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'} 
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'} 
+              {expandedComments[testimony.id] && (
+                <div style={styles.commentSection}>
+                  <textarea 
+                    placeholder="Share your thoughts or encouragement..." 
+                    value={commentInputs[testimony.id] || ''} 
+                    onChange={(e) => setCommentInputs(prev => ({ ...prev, [testimony.id]: e.target.value }))} 
+                    rows="3" 
+                    style={styles.commentInput} 
                   />
-                ))}
-              </div>
-            )}
+                  <button 
+                    style={styles.commentBtn} 
+                    onClick={() => handleCommentSubmit(testimony.id)} 
+                    disabled={!commentInputs[testimony.id]?.trim()} 
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} 
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}
+                  >
+                    Post Comment
+                  </button>
 
-            <div style={styles.actions}>
-              <div style={styles.actionButtons}>
-                <button
-                  style={{
-                    ...styles.likeBtn,
-                    ...(testimony.liked ? styles.likedOutline : styles.unlikedOutline)
-                  }}
-                  onClick={() => handleLike(testimony.id)}
-                  onMouseEnter={(e) => { if (!testimony.liked) { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; } }}
-                  onMouseLeave={(e) => { if (!testimony.liked) { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; } }}
-                >
-                  {testimony.liked ? '❤️' : '🤍'} {testimony.likes.length} Likes
-                </button>
-
-                <button
-                  style={{ ...styles.commentToggle, border: '1px solid transparent', background: 'transparent', color: PRIMARY }}
-                  onClick={() => toggleComments(testimony.id)}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = PRIMARY_HOVER; e.currentTarget.style.color = 'white'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = PRIMARY; }}
-                >
-                  💬 {testimony.comments.length} Comments
-                </button>
-              </div>
-            </div>
-
-            {expandedComments[testimony.id] && (
-              <div style={styles.commentSection}>
-                <textarea 
-                  placeholder="Share your thoughts or encouragement..." 
-                  value={commentInputs[testimony.id] || ''} 
-                  onChange={(e) => setCommentInputs(prev => ({ ...prev, [testimony.id]: e.target.value }))} 
-                  rows="3" 
-                  style={styles.commentInput} 
-                />
-                <button 
-                  style={styles.commentBtn} 
-                  onClick={() => handleCommentSubmit(testimony.id)} 
-                  disabled={!commentInputs[testimony.id]?.trim()} 
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER} 
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}
-                >
-                  Post Comment
-                </button>
-
-                {testimony.comments.length > 0 && (
-                  <div style={styles.commentsList}>
-                    {testimony.comments.map(comment => (
-                      <div key={comment.id} style={styles.comment}>
-                        <div style={styles.commentAvatar}>
-                          {comment.author.firstName?.[0]}{comment.author.lastName?.[0]}
-                        </div>
-                        <div style={styles.commentContent}>
-                          <div style={styles.commentHeader}>
-                            <span style={styles.commentAuthor}>
-                              {comment.author.firstName} {comment.author.lastName}
-                            </span>
-                            <span style={styles.commentDate}>
-                              {new Date(comment.createdAt).toLocaleString()}
-                            </span>
+                  {testimony.comments.length > 0 && (
+                    <div style={styles.commentsList}>
+                      {testimony.comments.map(comment => (
+                        <div key={comment.id} style={styles.comment}>
+                          <div style={styles.commentAvatar}>
+                            {comment.author.firstName?.[0]}{comment.author.lastName?.[0]}
                           </div>
-                          <p style={styles.commentText}>{comment.text}</p>
+                          <div style={styles.commentContent}>
+                            <div style={styles.commentHeader}>
+                              <span style={styles.commentAuthor}>
+                                {comment.author.firstName} {comment.author.lastName}
+                              </span>
+                              <span style={styles.commentDate}>
+                                {new Date(comment.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <p style={styles.commentText}>{comment.text}</p>
 
-                          {(comment.author.id === user?.id || (typeof isAdmin === 'function' ? isAdmin() : isAdmin)) && (
-                            <button 
-                              style={styles.commentDelete} 
-                              onClick={() => handleDeleteComment(comment.id)}
-                            >
-                              Delete
-                            </button>
-                          )}
+                            {(comment.author.id === user?.id || (typeof isAdmin === 'function' ? isAdmin() : isAdmin)) && (
+                              <button 
+                                style={styles.commentDelete} 
+                                onClick={() => handleDeleteComment(comment.id)}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })
       )}
     </div>
   );

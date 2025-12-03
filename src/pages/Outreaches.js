@@ -14,6 +14,12 @@ const Outreaches = () => {
   const [selected, setSelected] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState('');
+  const [lightboxImages, setLightboxImages] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   // Report states
   const [isReporting, setIsReporting] = useState(false);
   const [reportData, setReportData] = useState({ title: '', description: '', leader: '' });
@@ -65,6 +71,54 @@ const Outreaches = () => {
   useEffect(() => {
     fetchOutreaches();
   }, []);
+
+  // Lightbox functions
+  const openLightbox = (imageUrl, allImages, index) => {
+    setLightboxImages(allImages);
+    setLightboxImage(imageUrl);
+    setCurrentImageIndex(index);
+    setLightboxOpen(true);
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxImage('');
+    setLightboxImages([]);
+    setCurrentImageIndex(0);
+    document.body.style.overflow = 'auto';
+  };
+
+  const navigateLightbox = (direction) => {
+    let newIndex = currentImageIndex + direction;
+    
+    if (newIndex < 0) {
+      newIndex = lightboxImages.length - 1;
+    } else if (newIndex >= lightboxImages.length) {
+      newIndex = 0;
+    }
+    
+    setCurrentImageIndex(newIndex);
+    setLightboxImage(lightboxImages[newIndex]);
+  };
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxOpen) return;
+      
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowRight') {
+        navigateLightbox(1);
+      } else if (e.key === 'ArrowLeft') {
+        navigateLightbox(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, currentImageIndex, lightboxImages]);
 
   // Report functions
   const openReport = (outreach) => {
@@ -272,6 +326,95 @@ const Outreaches = () => {
   const PRIMARY_HOVER = '#0aa9c3';
   const DANGER = '#ef4444';
   const SUCCESS = '#10b981';
+
+  // Lightbox styles
+  const lightboxStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      zIndex: 3000,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    container: {
+      position: 'relative',
+      width: '90%',
+      height: '90%',
+      display: 'flex',
+      flexDirection: 'column'
+    },
+    imageContainer: {
+      flex: 1,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    },
+    image: {
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain'
+    },
+    closeButton: {
+      position: 'absolute',
+      top: isMobile ? '10px' : '20px',
+      right: isMobile ? '10px' : '20px',
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: 'none',
+      color: 'white',
+      fontSize: isMobile ? '1.5rem' : '2rem',
+      cursor: 'pointer',
+      width: isMobile ? '40px' : '50px',
+      height: isMobile ? '40px' : '50px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s'
+    },
+    navButton: {
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: 'none',
+      color: 'white',
+      fontSize: isMobile ? '1.5rem' : '2rem',
+      cursor: 'pointer',
+      width: isMobile ? '40px' : '50px',
+      height: isMobile ? '40px' : '50px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s'
+    },
+    prevButton: {
+      left: isMobile ? '10px' : '20px'
+    },
+    nextButton: {
+      right: isMobile ? '10px' : '20px'
+    },
+    counter: {
+      position: 'absolute',
+      bottom: isMobile ? '60px' : '20px',
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      color: 'white',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      background: 'rgba(0, 0, 0, 0.5)',
+      padding: '5px 10px',
+      borderRadius: '20px',
+      width: 'fit-content',
+      margin: '0 auto'
+    }
+  };
 
   const styles = {
     page: { 
@@ -488,7 +631,9 @@ const Outreaches = () => {
       height: isMobile ? '100px' : '120px', 
       objectFit: 'cover', 
       borderRadius: 8, 
-      border: '1px solid #eef2f7' 
+      border: '1px solid #eef2f7',
+      cursor: 'pointer',
+      transition: 'transform 0.2s'
     },
 
     reportCard: { 
@@ -591,6 +736,7 @@ const Outreaches = () => {
   };
 
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [hoveredPhoto, setHoveredPhoto] = useState(null);
 
   if (loading) {
     return (
@@ -602,6 +748,63 @@ const Outreaches = () => {
 
   return (
     <div style={styles.page}>
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div style={lightboxStyles.overlay} onClick={closeLightbox}>
+          <div style={lightboxStyles.container} onClick={(e) => e.stopPropagation()}>
+            <div style={lightboxStyles.imageContainer}>
+              <img 
+                src={lightboxImage} 
+                alt="Enlarged view" 
+                style={lightboxStyles.image}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            
+            {lightboxImages.length > 1 && (
+              <>
+                <button 
+                  style={{...lightboxStyles.navButton, ...lightboxStyles.prevButton}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateLightbox(-1);
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                >
+                  ‹
+                </button>
+                
+                <button 
+                  style={{...lightboxStyles.navButton, ...lightboxStyles.nextButton}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateLightbox(1);
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                >
+                  ›
+                </button>
+                
+                <div style={lightboxStyles.counter}>
+                  {currentImageIndex + 1} / {lightboxImages.length}
+                </div>
+              </>
+            )}
+            
+            <button 
+              style={lightboxStyles.closeButton}
+              onClick={closeLightbox}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       {error && <div style={styles.error}>{error}</div>}
 
       <div style={styles.header}>
@@ -708,7 +911,17 @@ const Outreaches = () => {
                     {(selected.photos || []).length === 0 ? (
                       <div style={{ color: '#94a3b8', textAlign: 'center', width: '100%' }}>No photos yet</div>
                     ) : (
-                      (selected.photos || []).map((p, i) => <img key={i} src={p} alt={`photo-${i}`} style={styles.photoThumb} />)
+                      (selected.photos || []).map((p, i) => (
+                        <img 
+                          key={i} 
+                          src={p} 
+                          alt={`photo-${i}`} 
+                          style={{...styles.photoThumb, ...(hoveredPhoto === `photo-${i}` ? { transform: 'scale(1.05)' } : {})}}
+                          onClick={() => openLightbox(p, selected.photos || [], i)}
+                          onMouseEnter={() => setHoveredPhoto(`photo-${i}`)}
+                          onMouseLeave={() => setHoveredPhoto(null)}
+                        />
+                      ))
                     )}
                   </div>
                 </div>
@@ -732,7 +945,17 @@ const Outreaches = () => {
 
                         {r.photos && r.photos.length > 0 && (
                           <div style={styles.photosRow}>
-                            {r.photos.map((p, i) => <img key={i} src={p} alt={`report-${i}`} style={styles.photoThumb} />)}
+                            {r.photos.map((p, i) => (
+                              <img 
+                                key={i} 
+                                src={p} 
+                                alt={`report-${i}`} 
+                                style={{...styles.photoThumb, ...(hoveredPhoto === `report-${i}` ? { transform: 'scale(1.05)' } : {})}}
+                                onClick={() => openLightbox(p, r.photos, i)}
+                                onMouseEnter={() => setHoveredPhoto(`report-${i}`)}
+                                onMouseLeave={() => setHoveredPhoto(null)}
+                              />
+                            ))}
                           </div>
                         )}
                       </div>
@@ -797,7 +1020,14 @@ const Outreaches = () => {
                       ) : (
                         reportPhotos.map((p, i) => (
                           <div key={i} style={{ position: 'relative' }}>
-                            <img src={p.url} alt={`preview-${i}`} style={styles.photoThumb} />
+                            <img 
+                              src={p.url} 
+                              alt={`preview-${i}`} 
+                              style={{...styles.photoThumb, ...(hoveredPhoto === `preview-${i}` ? { transform: 'scale(1.05)' } : {})}}
+                              onClick={() => openLightbox(p.url, reportPhotos.map(photo => photo.url), i)}
+                              onMouseEnter={() => setHoveredPhoto(`preview-${i}`)}
+                              onMouseLeave={() => setHoveredPhoto(null)}
+                            />
                             <button
                               onClick={() => removePhoto(i)}
                               style={{
@@ -948,7 +1178,14 @@ const Outreaches = () => {
                       ) : (
                         outreachPhotos.map((p, i) => (
                           <div key={i} style={{ position: 'relative' }}>
-                            <img src={p.url} alt={`preview-${i}`} style={styles.photoThumb} />
+                            <img 
+                              src={p.url} 
+                              alt={`preview-${i}`} 
+                              style={{...styles.photoThumb, ...(hoveredPhoto === `outreach-preview-${i}` ? { transform: 'scale(1.05)' } : {})}}
+                              onClick={() => openLightbox(p.url, outreachPhotos.map(photo => photo.url), i)}
+                              onMouseEnter={() => setHoveredPhoto(`outreach-preview-${i}`)}
+                              onMouseLeave={() => setHoveredPhoto(null)}
+                            />
                             <button
                               onClick={() => removeOutreachPhoto(i)}
                               style={{

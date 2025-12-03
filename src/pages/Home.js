@@ -11,6 +11,10 @@ const Home = () => {
   const [expandedComments, setExpandedComments] = useState({});
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxImage, setLightboxImage] = useState('');
+  const [lightboxImages, setLightboxImages] = useState([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [formData, setFormData] = useState({
     title: '',
     body: '',
@@ -141,6 +145,64 @@ const Home = () => {
 
   const toggleComments = (postId) => setExpandedComments(prev => ({ ...prev, [postId]: !prev[postId] }));
 
+  // Lightbox functions
+  const openLightbox = (imageUrl, allImages, index) => {
+    setLightboxImages(allImages);
+    setLightboxImage(imageUrl);
+    setCurrentImageIndex(index);
+    setLightboxOpen(true);
+    // Prevent body scroll when lightbox is open
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeLightbox = () => {
+    setLightboxOpen(false);
+    setLightboxImage('');
+    setLightboxImages([]);
+    setCurrentImageIndex(0);
+    // Restore body scroll
+    document.body.style.overflow = 'auto';
+  };
+
+  const navigateLightbox = (direction) => {
+    let newIndex = currentImageIndex + direction;
+    
+    if (newIndex < 0) {
+      newIndex = lightboxImages.length - 1;
+    } else if (newIndex >= lightboxImages.length) {
+      newIndex = 0;
+    }
+    
+    setCurrentImageIndex(newIndex);
+    setLightboxImage(lightboxImages[newIndex]);
+  };
+
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxOpen) return;
+      
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowRight') {
+        navigateLightbox(1);
+      } else if (e.key === 'ArrowLeft') {
+        navigateLightbox(-1);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, currentImageIndex, lightboxImages]);
+
+  // Filter only images for lightbox
+  const getImageAttachments = (attachments) => {
+    return attachments.filter(attachment => 
+      attachment.match(/\.(jpeg|jpg|png|gif|webp|bmp|svg)$/i) || 
+      attachment.includes('image/')
+    );
+  };
+
   // Shared UI tokens
   const PRIMARY = '#06b6d4';
   const PRIMARY_HOVER = '#0aa9c3';
@@ -153,6 +215,94 @@ const Home = () => {
     fileName: { flex: 1, fontSize: isMobile ? '0.8rem' : '0.9rem', color: '#374151' },
     removeFile: { background: 'none', border: 'none', color: DANGER, cursor: 'pointer', fontSize: isMobile ? '0.9rem' : '1rem' },
     uploadProgress: { padding: '1rem', textAlign: 'center', color: '#64748b' }
+  };
+
+  const lightboxStyles = {
+    overlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      zIndex: 2000,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    },
+    container: {
+      position: 'relative',
+      width: '90%',
+      height: '90%',
+      display: 'flex',
+      flexDirection: 'column'
+    },
+    imageContainer: {
+      flex: 1,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      overflow: 'hidden'
+    },
+    image: {
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain'
+    },
+    closeButton: {
+      position: 'absolute',
+      top: isMobile ? '10px' : '20px',
+      right: isMobile ? '10px' : '20px',
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: 'none',
+      color: 'white',
+      fontSize: isMobile ? '1.5rem' : '2rem',
+      cursor: 'pointer',
+      width: isMobile ? '40px' : '50px',
+      height: isMobile ? '40px' : '50px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s'
+    },
+    navButton: {
+      position: 'absolute',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      background: 'rgba(255, 255, 255, 0.1)',
+      border: 'none',
+      color: 'white',
+      fontSize: isMobile ? '1.5rem' : '2rem',
+      cursor: 'pointer',
+      width: isMobile ? '40px' : '50px',
+      height: isMobile ? '40px' : '50px',
+      borderRadius: '50%',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'background 0.2s'
+    },
+    prevButton: {
+      left: isMobile ? '10px' : '20px'
+    },
+    nextButton: {
+      right: isMobile ? '10px' : '20px'
+    },
+    counter: {
+      position: 'absolute',
+      bottom: isMobile ? '60px' : '20px',
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      color: 'white',
+      fontSize: isMobile ? '0.9rem' : '1rem',
+      background: 'rgba(0, 0, 0, 0.5)',
+      padding: '5px 10px',
+      borderRadius: '20px',
+      width: 'fit-content',
+      margin: '0 auto'
+    }
   };
 
   const styles = {
@@ -378,20 +528,15 @@ const Home = () => {
       width: '100%', 
       height: isMobile ? '120px' : '160px', 
       overflow: 'hidden', 
-      borderRadius: '8px' 
+      borderRadius: '8px',
+      cursor: 'pointer'
     },
     mediaItem: { 
       width: '100%', 
       height: '100%', 
       objectFit: 'cover', 
-      display: 'block', 
-      cursor: 'pointer', 
+      display: 'block',
       transition: 'transform 0.2s' 
-    },
-    videoPlayer: { 
-      width: '100%', 
-      borderRadius: '8px', 
-      maxHeight: '400px' 
     },
 
     actions: { 
@@ -528,6 +673,63 @@ const Home = () => {
 
   return (
     <div style={styles.page}>
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div style={lightboxStyles.overlay} onClick={closeLightbox}>
+          <div style={lightboxStyles.container} onClick={(e) => e.stopPropagation()}>
+            <div style={lightboxStyles.imageContainer}>
+              <img 
+                src={lightboxImage} 
+                alt="Enlarged view" 
+                style={lightboxStyles.image}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+            
+            {lightboxImages.length > 1 && (
+              <>
+                <button 
+                  style={{...lightboxStyles.navButton, ...lightboxStyles.prevButton}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateLightbox(-1);
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                >
+                  ‹
+                </button>
+                
+                <button 
+                  style={{...lightboxStyles.navButton, ...lightboxStyles.nextButton}}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigateLightbox(1);
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                >
+                  ›
+                </button>
+                
+                <div style={lightboxStyles.counter}>
+                  {currentImageIndex + 1} / {lightboxImages.length}
+                </div>
+              </>
+            )}
+            
+            <button 
+              style={lightboxStyles.closeButton}
+              onClick={closeLightbox}
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       <div style={styles.header}>
         <div style={styles.headerText}>
           <h1 style={styles.title}>Daily Mission Updates</h1>
@@ -578,13 +780,13 @@ const Home = () => {
                 <label style={styles.label}>
                   Attachments (Optional)
                   <span style={{fontSize: isMobile ? '0.7rem' : '0.8rem', color: '#64748b', marginLeft: '0.5rem'}}>
-                    Images, Videos (max 350MB), Audio, PDFs
+                    Images, Audio, PDFs
                   </span>
                 </label>
                 <input 
                   type="file" 
                   multiple 
-                  accept="image/*,video/*,audio/*,.pdf" 
+                  accept="image/*,audio/*,.pdf" 
                   onChange={handleFileSelect} 
                   style={{...styles.input, padding: isMobile ? '0.4rem' : '0.5rem'}} 
                   disabled={uploading} 
@@ -677,155 +879,181 @@ const Home = () => {
           )}
         </div>
       ) : (
-        updates.map(update => (
-          <div key={update.id} style={styles.updateCard}>
-            <div style={styles.updateHeader}>
-              <div style={styles.authorInfo}>
-                <div style={styles.avatar}>
-                  {update.author.firstName?.[0]}{update.author.lastName?.[0]}
+        updates.map(update => {
+          // Filter images for this update
+          const imageAttachments = getImageAttachments(update.attachments);
+          
+          return (
+            <div key={update.id} style={styles.updateCard}>
+              <div style={styles.updateHeader}>
+                <div style={styles.authorInfo}>
+                  <div style={styles.avatar}>
+                    {update.author.firstName?.[0]}{update.author.lastName?.[0]}
+                  </div>
+                  <div style={styles.authorDetails}>
+                    <div style={styles.authorName}>
+                      {update.author.firstName} {update.author.lastName}
+                    </div>
+                    <div style={styles.postDate}>
+                      {new Date(update.createdAt).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
-                <div style={styles.authorDetails}>
-                  <div style={styles.authorName}>
-                    {update.author.firstName} {update.author.lastName}
-                  </div>
-                  <div style={styles.postDate}>
-                    {new Date(update.createdAt).toLocaleString()}
-                  </div>
-                </div>
-              </div>
 
-              {(update.author.id === user?.id || user?.role === 'admin') && (
-                <button 
-                  style={styles.deleteBtn} 
-                  onClick={() => handleDeletePost(update.id)} 
-                  title="Delete post"
-                >
-                  🗑️
-                </button>
-              )}
-            </div>
-
-            {update.title && <h2 style={styles.updateTitle}>{update.title}</h2>}
-
-            <div style={styles.updateBody}>{update.body}</div>
-
-            {update.attachments && update.attachments.length > 0 && (
-              <div style={styles.mediaGrid}>
-                {update.attachments.map((attachment, index) => (
-                  <div key={index} style={styles.mediaItemWrap}>
-                    {attachment.includes('.mp4') || attachment.includes('video') ? (
-                      <video controls style={styles.videoPlayer}>
-                        <source src={attachment} type="video/mp4" />
-                        Your browser does not support the video tag.
-                      </video>
-                    ) : (
-                      <img 
-                        src={attachment} 
-                        alt={`Attachment ${index + 1}`} 
-                        style={styles.mediaItem} 
-                        onClick={() => window.open(attachment, '_blank')}
-                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div style={styles.actions}>
-              {update.allowLikes && (
-                <button 
-                  style={{ ...styles.likeBtn, ...(update.liked ? styles.likedOutline : styles.unlikedOutline) }} 
-                  onClick={() => handleLike(update.id)}
-                  onMouseEnter={(e) => { 
-                    if (!update.liked) { 
-                      e.currentTarget.style.backgroundColor = PRIMARY_HOVER; 
-                      e.currentTarget.style.color = 'white'; 
-                    } 
-                  }} 
-                  onMouseLeave={(e) => { 
-                    if (!update.liked) { 
-                      e.currentTarget.style.backgroundColor = 'transparent'; 
-                      e.currentTarget.style.color = PRIMARY; 
-                    } 
-                  }}
-                >
-                  {update.liked ? '❤️' : '🤍'} {update.likes.length}
-                </button>
-              )}
-
-              {update.allowComments && (
-                <button 
-                  style={{ ...styles.commentToggle }} 
-                  onClick={() => toggleComments(update.id)}
-                  onMouseEnter={(e) => { 
-                    e.currentTarget.style.backgroundColor = PRIMARY_HOVER; 
-                    e.currentTarget.style.color = 'white'; 
-                  }} 
-                  onMouseLeave={(e) => { 
-                    e.currentTarget.style.backgroundColor = 'transparent'; 
-                    e.currentTarget.style.color = PRIMARY; 
-                  }}
-                >
-                  💬 {update.comments.length} Comments
-                </button>
-              )}
-            </div>
-
-            {expandedComments[update.id] && update.allowComments && (
-              <div style={styles.commentSection}>
-                <textarea 
-                  placeholder="Write a comment..." 
-                  value={commentInputs[update.id] || ''} 
-                  onChange={(e) => setCommentInputs(prev => ({ ...prev, [update.id]: e.target.value }))} 
-                  rows="3" 
-                  style={styles.commentInput} 
-                />
-                <button 
-                  style={styles.commentBtn} 
-                  onClick={() => handleCommentSubmit(update.id)} 
-                  disabled={!commentInputs[update.id]?.trim()}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}
-                >
-                  Post Comment
-                </button>
-
-                {update.comments.length > 0 && (
-                  <div style={styles.commentsList}>
-                    {update.comments.map(comment => (
-                      <div key={comment.id} style={styles.comment}>
-                        <div style={styles.commentAvatar}>
-                          {comment.author.firstName?.[0]}{comment.author.lastName?.[0]}
-                        </div>
-                        <div style={styles.commentContent}>
-                          <div style={styles.commentHeader}>
-                            <span style={styles.commentAuthor}>
-                              {comment.author.firstName} {comment.author.lastName}
-                            </span>
-                            <span style={styles.commentDate}>
-                              {new Date(comment.createdAt).toLocaleString()}
-                            </span>
-                          </div>
-                          <p style={styles.commentText}>{comment.text}</p>
-                          {(comment.author.id === user?.id || user?.role === 'admin') && (
-                            <button 
-                              style={styles.commentDelete} 
-                              onClick={() => handleDeleteComment(comment.id)}
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                {(update.author.id === user?.id || user?.role === 'admin') && (
+                  <button 
+                    style={styles.deleteBtn} 
+                    onClick={() => handleDeletePost(update.id)} 
+                    title="Delete post"
+                  >
+                    🗑️
+                  </button>
                 )}
               </div>
-            )}
-          </div>
-        ))
+
+              {update.title && <h2 style={styles.updateTitle}>{update.title}</h2>}
+
+              <div style={styles.updateBody}>{update.body}</div>
+
+              {update.attachments && update.attachments.length > 0 && (
+                <div style={styles.mediaGrid}>
+                  {update.attachments.map((attachment, index) => (
+                    <div key={index} style={styles.mediaItemWrap}>
+                      {attachment.match(/\.(jpeg|jpg|png|gif|webp|bmp|svg)$/i) || attachment.includes('image/') ? (
+                        <img 
+                          src={attachment} 
+                          alt={`Attachment ${index + 1}`} 
+                          style={styles.mediaItem} 
+                          onClick={() => openLightbox(attachment, imageAttachments, imageAttachments.indexOf(attachment))}
+                          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        />
+                      ) : (
+                        // For non-images (like PDFs), open in new tab
+                        <a 
+                          href={attachment} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          style={{ 
+                            display: 'block', 
+                            width: '100%', 
+                            height: '100%', 
+                            backgroundColor: '#f8fafc', 
+                            borderRadius: '8px',
+                            textDecoration: 'none',
+                            color: '#374151',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexDirection: 'column',
+                            padding: '1rem'
+                          }}
+                        >
+                          {attachment.includes('.pdf') ? '📄 PDF' : '📎 File'}
+                          <span style={{ fontSize: '0.8rem', marginTop: '0.5rem', textAlign: 'center' }}>
+                            Click to open
+                          </span>
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={styles.actions}>
+                {update.allowLikes && (
+                  <button 
+                    style={{ ...styles.likeBtn, ...(update.liked ? styles.likedOutline : styles.unlikedOutline) }} 
+                    onClick={() => handleLike(update.id)}
+                    onMouseEnter={(e) => { 
+                      if (!update.liked) { 
+                        e.currentTarget.style.backgroundColor = PRIMARY_HOVER; 
+                        e.currentTarget.style.color = 'white'; 
+                      } 
+                    }} 
+                    onMouseLeave={(e) => { 
+                      if (!update.liked) { 
+                        e.currentTarget.style.backgroundColor = 'transparent'; 
+                        e.currentTarget.style.color = PRIMARY; 
+                      } 
+                    }}
+                  >
+                    {update.liked ? '❤️' : '🤍'} {update.likes.length}
+                  </button>
+                )}
+
+                {update.allowComments && (
+                  <button 
+                    style={{ ...styles.commentToggle }} 
+                    onClick={() => toggleComments(update.id)}
+                    onMouseEnter={(e) => { 
+                      e.currentTarget.style.backgroundColor = PRIMARY_HOVER; 
+                      e.currentTarget.style.color = 'white'; 
+                    }} 
+                    onMouseLeave={(e) => { 
+                      e.currentTarget.style.backgroundColor = 'transparent'; 
+                      e.currentTarget.style.color = PRIMARY; 
+                    }}
+                  >
+                    💬 {update.comments.length} Comments
+                  </button>
+                )}
+              </div>
+
+              {expandedComments[update.id] && update.allowComments && (
+                <div style={styles.commentSection}>
+                  <textarea 
+                    placeholder="Write a comment..." 
+                    value={commentInputs[update.id] || ''} 
+                    onChange={(e) => setCommentInputs(prev => ({ ...prev, [update.id]: e.target.value }))} 
+                    rows="3" 
+                    style={styles.commentInput} 
+                  />
+                  <button 
+                    style={styles.commentBtn} 
+                    onClick={() => handleCommentSubmit(update.id)} 
+                    disabled={!commentInputs[update.id]?.trim()}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = PRIMARY_HOVER}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = PRIMARY}
+                  >
+                    Post Comment
+                  </button>
+
+                  {update.comments.length > 0 && (
+                    <div style={styles.commentsList}>
+                      {update.comments.map(comment => (
+                        <div key={comment.id} style={styles.comment}>
+                          <div style={styles.commentAvatar}>
+                            {comment.author.firstName?.[0]}{comment.author.lastName?.[0]}
+                          </div>
+                          <div style={styles.commentContent}>
+                            <div style={styles.commentHeader}>
+                              <span style={styles.commentAuthor}>
+                                {comment.author.firstName} {comment.author.lastName}
+                              </span>
+                              <span style={styles.commentDate}>
+                                {new Date(comment.createdAt).toLocaleString()}
+                              </span>
+                            </div>
+                            <p style={styles.commentText}>{comment.text}</p>
+                            {(comment.author.id === user?.id || user?.role === 'admin') && (
+                              <button 
+                                style={styles.commentDelete} 
+                                onClick={() => handleDeleteComment(comment.id)}
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })
       )}
     </div>
   );
