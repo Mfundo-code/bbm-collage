@@ -159,6 +159,43 @@ export const alumniAPI = {
     api.get('/alumni/locations'),
 };
 
+// Add to api.js after alumniAPI
+
+export const studentsAPI = {
+  getStudents: (params = {}) => 
+    api.get('/students', { params }),
+  
+  getStudent: (userId) => 
+    api.get(`/students/${userId}`),
+  
+  createStudent: (data) => 
+    api.post('/students', data),
+  
+  updateStudent: (userId, data) => 
+    api.put(`/students/${userId}`, data),
+  
+  deleteStudent: (userId) => 
+    api.delete(`/students/${userId}`),
+  
+  getEnrollmentYears: () => 
+    api.get('/students/enrollment-years'),
+  
+  getPrograms: () => 
+    api.get('/students/programs'),
+  
+  getClassYears: () => 
+    api.get('/students/class-years'),
+  
+  followStudent: (userId) => 
+    api.post(`/students/${userId}/follow`),
+  
+  unfollowStudent: (userId) => 
+    api.delete(`/students/${userId}/follow`),
+  
+  getStudentProgress: (userId) => 
+    api.get(`/students/${userId}/progress`),
+};
+
 export const homileticsAPI = {
   getHomiletics: (params = {}) => 
     api.get('/homiletics', { params }),

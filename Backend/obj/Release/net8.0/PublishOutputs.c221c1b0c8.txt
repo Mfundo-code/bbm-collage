@@ -1,6 +1,12 @@
 C:\Users\Mfundo\Desktop\bbm\Backend\publish\Backend.exe
+C:\Users\Mfundo\Desktop\bbm\Backend\publish\publish\web.config
 C:\Users\Mfundo\Desktop\bbm\Backend\publish\appsettings.Development.json
 C:\Users\Mfundo\Desktop\bbm\Backend\publish\appsettings.json
+C:\Users\Mfundo\Desktop\bbm\Backend\publish\publish\appsettings.Development.json
+C:\Users\Mfundo\Desktop\bbm\Backend\publish\publish\appsettings.json
+C:\Users\Mfundo\Desktop\bbm\Backend\publish\publish\Backend.deps.json
+C:\Users\Mfundo\Desktop\bbm\Backend\publish\publish\Backend.runtimeconfig.json
+C:\Users\Mfundo\Desktop\bbm\Backend\publish\publish\Backend.staticwebassets.endpoints.json
 C:\Users\Mfundo\Desktop\bbm\Backend\publish\Backend.dll
 C:\Users\Mfundo\Desktop\bbm\Backend\publish\Backend.runtimeconfig.json
 C:\Users\Mfundo\Desktop\bbm\Backend\publish\Backend.pdb

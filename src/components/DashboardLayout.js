@@ -26,15 +26,17 @@ const DashboardLayout = () => {
 
   const isActive = (path) => location.pathname.startsWith(path);
 
-  const menuItems = [
-    { path: '/dashboard', icon: '🏠', label: 'Home', description: 'Daily mission updates' },
-    { path: '/dashboard/suggestions', icon: '💡', label: 'Suggestions', description: 'Share your ideas' },
-    { path: '/dashboard/announcements', icon: '📢', label: 'Announcements', description: 'Important notices' },
-    { path: '/dashboard/testimonies', icon: '🙏', label: 'Testimonies', description: 'Share experiences' },
-    { path: '/dashboard/sunday-services', icon: '⛪', label: 'Sunday Services', description: 'Worship services' },
-    { path: '/dashboard/missionaries', icon: '🌍', label: 'Missionaries', description: 'Mission work updates' },
-    { path: '/dashboard/alumni', icon: '🎓', label: 'Alumni', description: 'Graduate network' },
-  ];
+
+const menuItems = [
+  { path: '/dashboard', icon: '🏠', label: 'Home', description: 'Daily mission updates' },
+  { path: '/dashboard/students', icon: '🎓', label: 'Students', description: 'Current students' }, // Add this line
+  { path: '/dashboard/suggestions', icon: '💡', label: 'Suggestions', description: 'Share your ideas' },
+  { path: '/dashboard/announcements', icon: '📢', label: 'Announcements', description: 'Important notices' },
+  { path: '/dashboard/testimonies', icon: '🙏', label: 'Testimonies', description: 'Share experiences' },
+  { path: '/dashboard/sunday-services', icon: '⛪', label: 'Sunday Services', description: 'Worship services' },
+  { path: '/dashboard/missionaries', icon: '🌍', label: 'Missionaries', description: 'Mission work updates' },
+  { path: '/dashboard/alumni', icon: '🎓', label: 'Alumni', description: 'Graduate network' },
+];
 
   const handleNavigation = (path) => {
     navigate(path);

@@ -164,3 +164,9 @@ C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\wwwroot\uploads\6e2ce3e1-58
 C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\Newtonsoft.Json.dll
 C:\Users\Mfundo\Desktop\bbm\backend\bin\Debug\net8.0\Npgsql.dll
 C:\Users\Mfundo\Desktop\bbm\backend\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\publish\web.config
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\publish\appsettings.Development.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\publish\appsettings.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\publish\Backend.deps.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\publish\Backend.runtimeconfig.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Debug\net8.0\publish\Backend.staticwebassets.endpoints.json

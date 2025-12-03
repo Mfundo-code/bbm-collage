@@ -13,6 +13,7 @@ import Testimonies from './pages/Testimonies';
 import SundayServices from './pages/SundayServices';
 import Missionaries from './pages/Missionaries';
 import Alumni from './pages/Alumni';
+import Students from './pages/Students';
 import Homiletics from './pages/Homiletics';
 import CreateUser from './pages/CreateUser';
 
@@ -44,6 +45,7 @@ const AppRoutes = () => {
         <Route path="missionaries" element={<Missionaries />} />
         <Route path="alumni" element={<Alumni />} />
         <Route path="homiletics" element={<Homiletics />} />
+        <Route path="/dashboard/students" element={<Students />} />
         
         {/* New routes for the button navigation */}
         <Route path="nqf5" element={<NQF5 />} />

@@ -357,6 +357,84 @@ namespace Backend.DTOs
         public Dictionary<string, string> LinkedProfiles { get; set; } = new();
     }
 
+    // STUDENT DTOs - ADD THESE
+    public class StudentDto
+    {
+        public string UserId { get; set; } = null!;
+        public UserDto User { get; set; } = null!;
+        public DateTime EnrollmentDate { get; set; }
+        public DateTime? GraduationDate { get; set; }
+        public string? Program { get; set; }
+        public string? ClassYear { get; set; }
+        public List<string> Tags { get; set; } = new();
+        public string? Notes { get; set; }
+    }
+
+    public class CreateStudentDto
+    {
+        [Required]
+        [EmailAddress]
+        [MaxLength(256)]
+        public string Email { get; set; } = null!;
+
+        [Required]
+        [MaxLength(100)]
+        public string FirstName { get; set; } = null!;
+
+        [MaxLength(100)]
+        public string? LastName { get; set; }
+
+        [MaxLength(20)]
+        public string? ContactPhone { get; set; }
+
+        [MaxLength(200)]
+        public string? ProfilePhoto { get; set; }
+
+        [Required]
+        public DateTime EnrollmentDate { get; set; }
+
+        public DateTime? GraduationDate { get; set; }
+
+        [MaxLength(100)]
+        public string? Program { get; set; }
+
+        [MaxLength(50)]
+        public string? ClassYear { get; set; }
+
+        public List<string> Tags { get; set; } = new();
+
+        public string? Notes { get; set; }
+    }
+
+    public class UpdateStudentDto
+    {
+        [MaxLength(100)]
+        public string? FirstName { get; set; }
+
+        [MaxLength(100)]
+        public string? LastName { get; set; }
+
+        [MaxLength(20)]
+        public string? ContactPhone { get; set; }
+
+        [MaxLength(200)]
+        public string? ProfilePhoto { get; set; }
+
+        public DateTime? EnrollmentDate { get; set; }
+
+        public DateTime? GraduationDate { get; set; }
+
+        [MaxLength(100)]
+        public string? Program { get; set; }
+
+        [MaxLength(50)]
+        public string? ClassYear { get; set; }
+
+        public List<string>? Tags { get; set; }
+
+        public string? Notes { get; set; }
+    }
+
     public class HomileticsEntryDto
     {
         public int Id { get; set; }
@@ -643,18 +721,6 @@ namespace Backend.DTOs
         public DateTime UploadedAt { get; set; }
         public DateTime? ExpiresAt { get; set; }
         public string Status { get; set; } = null!;
-    }
-
-    public class StudentDto
-    {
-        public string UserId { get; set; } = null!;
-        public UserDto User { get; set; } = null!;
-        public DateTime EnrollmentDate { get; set; }
-        public DateTime? GraduationDate { get; set; }
-        public string? Program { get; set; }
-        public string? ClassYear { get; set; }
-        public List<string> Tags { get; set; } = new();
-        public string? Notes { get; set; }
     }
 
     public class CreateAdminDto

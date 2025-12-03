@@ -164,3 +164,10 @@ C:\Users\Mfundo\Desktop\bbm\backend\obj\Release\net8.0\refint\Backend.dll
 C:\Users\Mfundo\Desktop\bbm\backend\obj\Release\net8.0\Backend.pdb
 C:\Users\Mfundo\Desktop\bbm\backend\obj\Release\net8.0\Backend.genruntimeconfig.cache
 C:\Users\Mfundo\Desktop\bbm\backend\obj\Release\net8.0\ref\Backend.dll
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Release\net8.0\wwwroot\uploads\1895611d-7773-46cb-a788-e25bcb9a12f3.jpg
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Release\net8.0\publish\web.config
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Release\net8.0\publish\appsettings.Development.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Release\net8.0\publish\appsettings.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Release\net8.0\publish\Backend.deps.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Release\net8.0\publish\Backend.runtimeconfig.json
+C:\Users\Mfundo\Desktop\bbm\Backend\bin\Release\net8.0\publish\Backend.staticwebassets.endpoints.json
