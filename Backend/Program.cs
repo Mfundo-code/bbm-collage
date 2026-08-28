@@ -94,7 +94,7 @@ builder.Services.AddCors(options =>
             "http://localhost:5173",
             "https://localhost:3000",
             "https://localhost:5173",
-            "https://bbm.207-180-201-93.sslip.io"
+            "https://bbm.169-58-244-210.sslip.io"
         )
         .AllowAnyMethod()
         .AllowAnyHeader()
