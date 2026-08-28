@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL =  'https://bbm.207-180-201-93.sslip.io/api';
+const API_BASE_URL =  'https://bbm.169-58-244-210.sslip.io/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
